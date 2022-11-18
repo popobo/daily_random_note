@@ -43,3 +43,28 @@ void on_<object name>_<signal name>(<signal parameters>);
     ```
     错误的原因是，每次调用QSplitter::sizes()都返回一个新的QList<int>值，如果不存储这个值，C++在开始迭代之前就会自动将其销毁，而只留下一个浮动迭代器。更糟的是，每次循环运行由于都调用了splitter->sizes().end()，QSplitter::sizes()都必须生成一个新的列表的副本。总之，如果你使用STL风格迭代器，总是要在返回值的容器副本上进行遍历。而Java Style不需要，因为它自动生成了副本.
 
+
+## 20221116
+### confusion
+- libopengl_world.so.4.0.6
+    https://blog.csdn.net/ShareProgress/article/details/121561252
+
+
+## 20221117
+### confusion
+
+### something new
+- 不要把所有图片都放到Qt资源文件，否则会导致源代码过大
+- 创建和清理mat空间
+    ```
+    Mat mat(3000, 4000, CV_8UC3);
+    mat.create(rows, cols, CV_8UC1); //会把之前的内存清理掉
+    release或者析构 引用计数为1时释放
+    ```
+- isContinuous
+
+    判断存储空间是否连续
+    
+    通过step记录
+
+    
