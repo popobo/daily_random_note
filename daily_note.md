@@ -67,4 +67,13 @@ void on_<object name>_<signal name>(<signal parameters>);
     
     通过step记录
 
+## 20221118
+### confusion
+- 片段插值
+- 指定多级渐远纹理的级别
+
+### something new
+- Visual Studio
     
+    相对路径起点默认是vcxproj文件所在目录，如LearnOpenGL.vcxproj在E:\Visual_Studio\LearnOpenGL\LearnOpenGL下，则E:\Visual_Studio\LearnOpenGL\LearnOpenGL\src下的main.cpp中的
+    "res/shaders/shader.vs"相当于"E:\Visual_Studio\LearnOpenGL\LearnOpenGL\res\shaders\shader.vs"
