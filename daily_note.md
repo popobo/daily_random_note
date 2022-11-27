@@ -77,3 +77,22 @@ void on_<object name>_<signal name>(<signal parameters>);
     
     相对路径起点默认是vcxproj文件所在目录，如LearnOpenGL.vcxproj在E:\Visual_Studio\LearnOpenGL\LearnOpenGL下，则E:\Visual_Studio\LearnOpenGL\LearnOpenGL\src下的main.cpp中的
     "res/shaders/shader.vs"相当于"E:\Visual_Studio\LearnOpenGL\LearnOpenGL\res\shaders\shader.vs"
+
+## 20221119
+### confusion
+- 
+### something new
+- 在静态库中最好不要去存放全局变量，也不要在这里创建单例对象等。如果对程序文件大小有要求，最好使用动态库。
+
+
+## 20221120
+### confusion
+### something new
+- C++11规定了local static在多线程条件下的初始化行为，要求编译器保证了内部静态变量的线程安全性
+
+
+## 20221123
+### confusion
+### something new
+- 编译ffmpeg，https://blog.csdn.net/DemoFY/article/details/127636507
+sudo ./configure --enable-version3 --enable-gpl --enable-nonfree --enable-small --enable-libmp3lame --enable-libx264 --enable-libx265 --enable-libvpx --enable-libtheora --enable-libvorbis --enable-libopus --enable-libfdk-aac --enable-libass --enable-libwebp --enable-librtmp --enable-postproc --enable-libfreetype --enable-pthreads --enable-openssl --enable-shared --disable-debug --disable-doc --disable-ffplay 
