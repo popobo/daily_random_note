@@ -96,3 +96,100 @@ void on_<object name>_<signal name>(<signal parameters>);
 ### something new
 - 编译ffmpeg，https://blog.csdn.net/DemoFY/article/details/127636507
 sudo ./configure --enable-version3 --enable-gpl --enable-nonfree --enable-small --enable-libmp3lame --enable-libx264 --enable-libx265 --enable-libvpx --enable-libtheora --enable-libvorbis --enable-libopus --enable-libfdk-aac --enable-libass --enable-libwebp --enable-librtmp --enable-postproc --enable-libfreetype --enable-pthreads --enable-openssl --enable-shared --disable-debug --disable-doc --disable-ffplay 
+
+## 20221202
+### confusion
+### something new
+- 模板函数的声明与定义分离比较麻烦，主要有以下解决方法:
+在声明处直接实现模板函数。
+在使用模板函数的 cpp 文件中实现模板函数，不过多个文件中使用得分别实现，比较麻烦。
+新建一个文件，网上一般会以.hpp 或者.tpp 作为后缀，实现模板函数，在使用处 include。
+- 调用gl函数crash的一般原因是glad未初始化
+
+## 20221203
+### confusion
+### something new
+```c++
+std::shared_ptr<Frame[]> f8(new Frame[10]());             // Error，管理动态数组时，需要指定删除器
+  std::shared_ptr<Frame> f9(new Frame[10](), std::default_delete<Frame[]>());
+```
+- 设计模式最大的目的就是复用
+- 面向对象设计最大的优势在于抵御变化
+    - 隔离变化
+    - 各司其职
+    - 对象是拥有某种责任的抽象
+- 设计原则
+    - 依赖倒置原则（DIP）
+        - 高层（稳定）不依赖底层（变化），二者依赖抽象（稳定）
+        - 抽象不依赖于细节
+        - (依赖默认是编译时依赖，A依赖B，即A必须有B才能编译通过，其他还有运行时依赖)
+
+    - 开放封闭原则
+        - 对扩展开放，对更改封闭，避免修改原有代码
+        - 导致重新测试，重新编译，重新部署
+
+    - 单一职责原则
+        - 一个类应该仅有一个引起它变化的原因
+        - 变化的方向隐含着类的责任
+    - 替换原则
+        - 子类必须能替换它们的基类
+        - 继承表达类型抽象
+    - 接口隔离原则
+        - 不应强迫客户依赖它们不适用的方法
+        - 接口应该小而完备
+    - 优先使用对象组合，而不是类继承
+    - 封装变化点
+    - 针对接口编程，而不是针对实现编程
+
+## 20221204
+### confusion
+### something new
+- 模式分类 隔离变化，复用稳定
+- 重构到设计模式
+- 重构关键技法
+    - 静态->动态
+    - 早绑定->晚绑定
+    - 继承->组合
+    - 编译时依赖->运行时依赖‘
+    - 紧耦合->松耦合
+- 组件协作模式
+    - Template Methor
+    - Strategy
+    - Observer/event
+- 模式方法 Template Methor
+    - 早绑定->晚绑定
+    - 延迟到子类，支持子类的变化
+    - 子类可以复用一个算法的接口(非虚函数)，也可以重写算法中的某些步骤(虚函数)
+    - 不要调用我，让我来调用你
+- 策略模式
+    - 动态看程序，加时间轴
+    - 复用指的是二进制级(编译单位)的复用，而不是原代码片段级的复用
+    - 扩展增加新的子类，子类化
+    - 看到if else或switch的时候考虑使用策略模式
+    - 减少冗余判断，代码具有良好的本地性，CPU高速缓存
+    - strategy对象一般可采用singleton
+
+- 观察者模式
+    - C++一般不推荐多继承，只推荐一种多继承模式，一个主继承类，其他都是接口类
+    - 一对多
+    - 自动通知
+- 适配器模式
+    - 接口隔离模式
+    - 场景：将“现存对象”放在新的环境中应用
+    - 老接口转换成新接口
+    - adapter实现target，调用adaptee
+- 工厂模式
+    - 对象创建模式
+    - 通过“对象创建模式”绕开new，避免对具体类的依赖
+    - 多态new
+    - 并没有彻底消除依赖，把变化限制在一个局部可控的地方
+    - 把实例化延迟到子类（具体工厂类）
+    - 工厂基类，具体工厂类
+    - 产品创建方法/参数相同
+- 抽象(家族)工厂模式
+    - 创建一系列相互依赖的对象（数据库）
+
+- 原型模式
+    - 对象创建模式
+    - 把产品和工厂合并
+- QThread 子线程没有任何资格对窗口(ui)做任何的读写操作
