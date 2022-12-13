@@ -246,3 +246,8 @@ std::shared_ptr<Frame[]> f8(new Frame[10]());             // Error，管理动�
 ### confusion
 - 问题如下，解决方法是https://www.jianshu.com/p/dd33613360e0，需要再深入研究下
 ![screenshot](./Snipaste_2022-12-07_15-49-10.png)
+
+## 20221209
+### confusion
+### something new
+- FFmpeg中AVPacket和AVFrame管理：https://blog.csdn.net/lidec/article/details/118998366
