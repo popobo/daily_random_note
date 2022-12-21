@@ -187,3 +187,114 @@
 - 处理方式
     - 当且仅当出现循环引用时使用前置声明（一般设计时就应该避免循环引用）
     - 由一个专门管理头文件的团队来管理前置声明
+
+# Qt
+## Qt元对象系统
+- Qt的元对象系统（Meta-Object System）
+提供对象之前通信的信号与槽机制、
+运行时类型信息、动态属性系统
+    - QObject类时所有使用元对象系统的类的基类
+    - 在一个类的private部分声明Q_OBJECT宏，使得类可以使用元对象特性，
+    如动态属性、信号与槽
+    - MOC（元对象编译器）为每个QObject的子类提供必要的代码来实现元对象系统的特性。
+    - 除了信号与槽机制外，元对象还提供其他功能
+        - Qbjet::metaOject()函数返回类关联的元对象，可以访问元对象的接口。
+        - 
+            ```c++
+            QObject *obj = new QPushButton;
+            obj->metaObject ()->classNane();  //返回"QPushButton
+            ```
+        - Q0bjct:inherits(const char *className)函数判断一个对象实例是否是名称为 className 的类或 QObject 的子类的实例。
+        - 
+            ```c++
+            QTimer *timer = new QTimer;  // OTimer是oobject的子类
+            timer->inherits ("QTimer");  //返回true
+            timer->inherits ("QObject");  //返回true
+            timer->inherits ("QAbstractButton");//返回false. 不是QAbatractButton的子类
+            ```
+        - QObject::tr() 和 Qbjet::trUtf8() 函数可翻译字符串，用于多语言界面设计。
+        - QObjct:setProperty() 和 Q0bjct:property() 函数用于通过属性名称动态设置和获取属性值。
+        - 对于 QObject 及其子类，使用 qobject_cast() 函数进行动态投射(dynamic cast)。
+        - 
+            ```c++
+            // QMyWidget 是 QWidget 的子类并且在类定义中声明了Q_OBJECT宏。
+            Q0bject *obj = new QMyWidget;
+            Qwidget *widget = qobject_cast<Qwidget *>(obj); // 成功
+            QMyWidget *myWidget = qobject_cast<QMyWidget *>(obj); // 成功，qoiect_cast() 并不区分 Qt 内建的类型和用户自定义类型
+            QLabe1 *labol = qobject_caot<QLabe1 *>(obj); // 失败
+            ```
+## 属性系统
+- 属性定义：Qt提供一个Q_PROPERTY宏可以定义属性，也是基于元对象系统实现的。
+    - 在QObject的子类中，可以用宏Q_PROPERTY定义属性
+    - 
+        ```c++
+        Q_PROPERTY(type name
+             (READ getFunction [WRITE setFunction] |
+              MEMBER memberName [(READ getFunction | WRITE setFunction)])
+             [RESET resetFunction]
+             [NOTIFY notifySignal]
+             [REVISION int]
+             [DESIGNABLE bool]
+             [SCRIPTABLE bool]
+             [STORED bool]
+             [USER bool]
+             [CONSTANT]
+             [FINAL])
+        ```
+        - READ 指定一个读取属性值的函数，没有 MEMBER 关键字时必须设置READ。
+        - WRITE指定一个设定属性值的函数， 只读属性没有WRITE设置。
+        - MEMBER指定一个成员变量与属性关联，成为可读可写的属性，无需再设置READ和WRITE。
+        - RESET是可选的，用于指定一个设置属性缺省值的函数。
+        - NOTIFY是可选的，用于设置一个信号， 当属性值变化时发射此信号。
+        - CONSTANT表示属性值是常数，对于一个对象实例，READ指定的函数返回值是常数，
+        但每个实例的返回值可以不一样。具有CONSTANT关键字的属性不能有WRITE和NOTIFY关键字。
+        - FINAL表示所定义的属性不能被子类重载。
+        - QWidget定义属性的例子：
+            - 
+                ```c++
+                Q_PROPERTY (bool  focus READ hasFocus)
+                Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled)
+                Q_PROPERTY (QCursor cursor READ cursor WRITE setCursor RESET unsetCursor)
+                ```
+    - 属性的使用
+        - 不管是否用READ和WRITE定义了接口函数。
+        只要知道属性名称就可以通过QObjct:property()读取属性值，并通过QObject:setProperty0设置属性值
+        ```c++
+        QPushButton *button = new QPushButton;
+        QObject *object = button;
+        object->setProperty("flat", true);
+        bool isFlat- object->property("flat")
+        ```
+- 动态属性
+    - QObject:setPropert()函数可以在运行时为类定义一个新的属性，称之为动态属性。
+    动态属性是针对类的实例定义的。
+    动态属性可以使用Qbjct:property()查询，就如在类定义里用 Q_PROPERTY 宏定义的属性一样。
+    - 例如，在数据表编辑界面上，一些字段是必填字段，
+    就可以在初始化界面时为这些字段的关联显示组件定义一个新的required属性，
+    并设置值为"true"，如:
+    - 
+        ```c++
+        editName->setProperty("required"，"true");
+        comboSex-> setProperty("required". "true"); 
+        checkAgree-> setProperty("required", "true");
+        ```
+    - 然后，可以应用下面的样式定义将这种必填字段的背景颜色设置为亮绿色
+    - 
+        ```
+        *[required="true"] (background-color: lime)
+        ```
+- 类的附加信息
+    - 属性系统还有一个宏Q_CLASSINFO可以为类的元对象定义“名称-值”信息
+    - 
+        ```c++
+        class QMyC1ass : public QObject
+        { 
+        Q_OBJECT
+        Q_CLASSINFO("author", "Wang" )
+        Q_CLASSINFO("company", "UPC" )
+        Q_CLASSINFO("version "，"3.0.1")
+        public:
+        ...
+        }
+        ```
+    -  通过QMetaClassInfo QMetaObject::classInfo(int index) const获得类附加信息名称和值。
