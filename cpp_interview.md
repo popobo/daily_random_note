@@ -298,3 +298,84 @@
         }
         ```
     -  通过QMetaClassInfo QMetaObject::classInfo(int index) const获得类附加信息名称和值。
+
+
+## C++标准库
+- 第二章 C++及标准库简介
+    - 2.1 C++ Standard的历史
+        - C++标准
+            - 1.C++98，ISO/IEC 14882:1998
+            - 2.C++03，ISO/IEC 14882:2003，和C++98一样都被视作“第一份C++标准规格”
+            - 3.TR1，ISO/IEC 14882:2007
+            - 4.C++11，ISO/IEC 14882:2011，是第二份C++标准，C++0x即是C++11
+        - 2.1.1 C++11 Standard常见疑问
+            - String class设计比较完善和安全，接口完备，并有异常抛出机制
+            - STL 不是非常变量，也不对很多逻辑错误进行检查，需要使用者清楚其概念并妥善使用
+        - 2.1.2 C++98和C++11的兼容性
+            - 可以通过定义宏__cplusplus的值来指定当前文件以什么标准进行编译
+            - 向后兼容仅保证源码兼容，不保证二进制兼容
+    - 2.2 复杂度与Big-O标记
+- 第三章
+    - 3.1.1 微小但重要的语法提升
+        - Template表达式内的空格
+        - 
+            ```
+            vector<list<int> >; // C++11无需空格
+            ```
+        - nullptr和std::nullptr_t
+            - nullptr代替原来的0和NULL
+            - nullptr是一个新的基础类型std::nullptr_t
+    - 3.1.2 以auto完成类型自动推导
+        - test
+    - 3.1.3 一致性初始化（Uniform Initialization）和初值列（Initializer List）
+        - code
+        - 
+            ```c++
+            int i; // has undefined value
+            int j{}; // j is initialized by 0
+            int *p{}; // p is initialized bny nullptr
+            ```
+        - 窄化（narrowing）也就是精度降低或造成数值变动，对大括号是不成立的
+            - code
+            - 
+                ```c++
+                    int x1(5.3); // OK
+                    int x2 = 5.3; // OK
+                    int x3{0.0}; // ERROR
+                    vector<int> v1{1, 2.0}; // ERROR
+                ```
+        - 当“指明参数个数”和“指明一个初值列”的构造函数同时存在时，
+        会优先使用带初值列的构造函数
+        - 注意explict与带初值列的构造函数的关系
+
+    - 3.1.4 Range-Based for循环
+        - 类foreach循环
+        - 为了避免调用每个元素的拷贝构造和析构函数，一般采用for(const auto&)的形式
+        等同于 for (auto _pos = coll.begin(), _end=coll.end(); _pos!=_end; ++_pos) {}
+        - 对大小已知的C-style array也可以使用Range-Based for循环
+    - 3.1.5 Move语义与Rvalue Reference
+        - 右值引用
+        - 移动构造函数
+        - C++标准库的class保证，在一次move后，对象处于有效但不确定状态
+        可以在move后，对它赋予新值，但当前值是不确定的
+        - SLT容器保证了，被搬移内容者，搬移后其值为空
+        - Rvalue 和 lvalue Reference的重载规则
+            左值引用只能接受左值
+            常量左值引用能接受左值和右值
+            当（常量）左值引用和右值引用重载同时存在时，
+            左值找左值引用，右值找右值引用
+        - 返回Rvalue Reference
+            - 你不需要也不应该返回右值引用，即不该move()返回值
+            - 编译器有自身的优化规则
+                - RVO，返回值优化
+                - 否则move
+                - 否则copy
+                - 否则报错
+    - 3.1.6 新式的字符串字面常量
+        - Raw String Literal R"()"
+            - 完整形式R"delim(...)delim"，delim是个自定义字符序列
+        - 编码的（Encoded）String Literal
+            - u8, UTF-8 string literal, const char
+            - u, string literal, char16_t
+            - U, string literal, char32_t
+            - L, wide string literal, wchar_t
