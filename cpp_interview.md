@@ -298,9 +298,281 @@
         }
         ```
     -  通过QMetaClassInfo QMetaObject::classInfo(int index) const获得类附加信息名称和值。
+## 信号与槽
+- QMetaObject::connectSlotByName()
+    - 借助QMetaObject::connectSlotByName()的作用，按以下命名规则命名槽函数，
+    “void on_<object name>_<signal name>(<signal parameters>);”，
+    则connectSlotByName会自动进行信号与槽的连接
+    - 若不希望由connectSlotByName进行自动连接，则需要注意槽函数的名字。
+    否则轻则警告，重则导致重复连接
+- connect的三种写法
+    - 元方法式，编译时不做错误检查
+        connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(pbutton_clicked()));
+    - 函数指针式，省去字符查找，效率更高，并且编译时会对参数类型、个数进行检查，
+    涉及到重载的函数，则比较麻烦
+    connect(ui->pushButton,&QPushButton::clicked,this,&MainWindow::pbutton_clicked);
+    - 
+        ```c++
+            QLCDNumber::display(int)
+            QLCDNumber::display(double)
+            QLCDNumber::display(QString)
 
+            auto slider = new QSlider(this);
+            auto lcd = new QLCDNumber(this);
 
-## C++标准库
+            // String-based syntax
+            connect(slider, SIGNAL(valueChanged(int)),
+                    lcd, SLOT(display(int)));
+
+            // Functor-based syntax, first alternative
+            connect(slider, &QSlider::valueChanged,
+                    lcd, static_cast<void (QLCDNumber::*)(int)>(&QLCDNumber::display));
+
+            // Functor-based syntax, second alternative
+            void (QLCDNumber::*mySlot)(int) = &QLCDNumber::display;
+            connect(slider, &QSlider::valueChanged,
+                    lcd, mySlot);
+
+            // Functor-based syntax, third alternative
+            connect(slider, &QSlider::valueChanged,
+                    lcd, QOverload<int>::of(&QLCDNumber::display));
+
+            // Functor-based syntax, fourth alternative (requires C++14)
+            connect(slider, &QSlider::valueChanged,
+                    lcd, qOverload<int>(&QLCDNumber::display));
+        ```
+    - functor式
+    连接信号到任意Lambda、std::bind上
+    - 
+        ```c++
+            QByteArray page = ...;
+            QTcpSocket *socket = new QTcpSocket;
+            socket->connectToHost("qt-project.org", 80);
+            QObject::connect(socket, &QTcpSocket::connected, this, [=] () {
+                    socket->write("GET " + page + "\r\n");
+            }, Qt::AutoConnection);
+        ```
+    - 注意事项：
+        - 槽函数参数个数可以小于信号参数个数，槽函数参数必须在信号中找到对应，多余的参数将被忽略。
+        connect(sender, SIGNAL(mySignal(int, const QString &)),receiver, SLOT(mySlot(int)));
+        - 信号可以连接信号
+        - 如果一个信号被多个槽连接，则在发出信号时，将按照连接的顺序执行槽函数
+        - disconnect 断开连接。
+    - 连接类型，Qt::ConnectionType
+        - Qt::AutoConnection
+        默认连接类型，如果信号接收方与发送方在同一个线程，则使用Qt::DirectConnection，
+        否则使用Qt::QueuedConnection，连接类型在信号发射时决定
+        - Qt::DirectConnection
+        信号所连接的槽函数将会被立即执行，并且是在发送信号的线程，
+        倘若槽函数执行的是耗时操作，信号由UI线程发射，则会阻塞Qt的事件循环，UI会进入无响应状态
+        - Qt::QueuedConnection
+        槽函数将会在接收者的线程被执行，
+        此中连接类型下的信号倘若被多次触发，相应的槽函数会在接收者的线程里被顺序执行相应次数，
+        当使用Qt::QueuedConnection时，参数类型必须是Qt基本类型，或者使用qRegisterMetaType()注册了的自定义类型
+        - Qt::BlockingQueuedConnection
+        和Qt::QueuedConnnection类似，区别在于发送信号的线程在槽函数执行完毕之前一直处于阻塞状态，收发双方必须不在同一线程，否则会导致死锁
+        - Qt::UniqueConnection
+        执行方式与AutoConnection相同，不过关联时唯一的。
+        如果相同两个对象，相同的信号关联到相同的槽，那么第二次 connect 将失败。
+
+## QThread多线程
+- QThread使用方法
+    - QThread Class文档，https://doc.qt.io/qt-6.2/qthread.html#details
+        - 使用方法
+            - 组合QThread的方式，推荐做法
+            - 
+                ```c++
+                /*--------------------DisconnectMonitor-------------------------*/
+                class DisconnectMonitor : public QObject
+                {
+                    Q_OBJECT
+
+                public:
+                    explicit DisconnectMonitor();
+
+                signals:
+                    void StartMonitor(long long hanlde);
+                    void StopMonitor();
+                    // if Controller disconnect emit this signal
+                    void Disconnect();
+
+                private slots:
+                    void slot_StartMonitor(long long hanlde);
+                    void slot_StopMonitor();
+                    // State machine
+                    void Monitor();
+
+                private:
+                    long long ControllerHanlde;
+                    QTimer *MonitorTimer;
+                };
+
+                DisconnectMonitor::DisconnectMonitor()
+                {
+                    // New a Timer monitor controller by timing
+                    MonitorTimer = new QTimer;
+
+                    ControllerHanlde = 0;
+
+                    connect(MonitorTimer,&QTimer::timeout,this,&DisconnectMonitor::Monitor);
+                    connect(this,&DisconnectMonitor::StartMonitor,this,&DisconnectMonitor::slot_StartMonitor);
+                    connect(this,&DisconnectMonitor::StopMonitor,this,&DisconnectMonitor::slot_StopMonitor);
+
+                    MonitorTimer->start(TAKETIME);
+                }
+
+                void DisconnectMonitor::Monitor(){
+
+                    // if not Controller -> return
+                    if(0 == ControllerHanlde){
+                        return;
+                    }
+                    //else Listening
+                    else{
+                        int state = IsConnect(ControllerHanlde);
+                        if (0 != state){
+                            emit Disconnect();
+                        }
+                    }
+                }
+
+                /*---------------------------Controller----------------------------*/
+                class Controller : public QObject
+                {
+                    Q_OBJECT
+                    QThread workerThread;
+                public:
+                    Controller() {
+                        DisconnectMonitor *monitor = new DisconnectMonitor;
+                        monitor->moveToThread(&workerThread);
+                        connect(workerThread, &QThread::finished, monitor, &QObject::deleteLater);
+                        connect(monitor,SIGNAL(Disconnect()),this,SLOT(DisconnectManage()));
+                        workerThread.start();
+                    }
+                    ~Controller() {
+                        workerThread.quit();
+                        workerThread.wait();
+                    }
+                private slots:
+                    void DisconnectManage();
+                };
+                ```
+                - 通过moveToThread()将Object对象移动到新线程，
+                整个monitor都将在子线程中运行（感性理解）
+                - 注意事项：
+                    - 并不能认为monitor的控制权归属新线程，仍属于主线程
+                    moveToThread()的作用是将槽函数在指定线程中调用，
+                    仅有槽函数在指定线程中调用，包括构造函数等都在主线程中调用
+                    - DisconnectMonitor必须继承自QObject，否则不能移动
+                    - 如果Thread为nullptr，则该对象及其子对象的所有事件处理都将停止，因为它们不再与任何线程关联
+                    - 调用 moveToThread() 时，移动对象的所有计时器将被重置。 
+                    计时器首先在当前线程中停止，然后在targetThread中重新启动（以相同的间隔），这时定时器属于子线程。
+                    若在线程之间不断移动对象可能会无限期地延迟计时器事件。
+                    - moveToThread()线程不安全，
+                    只能将一个对象move到另一个线程，
+                    不能将对象从任意线程move到当前线程，除非这个对象不再与任何线程关联
+
+            - 继承QThread的方式
+            -
+                ```c++
+                    /*------------------------------WorkerThread-----------------------------------*/
+                    class WorkerThread : public QThread
+                    {
+                        Q_OBJECT
+                    public:
+                        explicit WorkerThread();
+                    protected:
+                        void run();
+                    signals:
+                        void resultReady(const QString &s);
+                    };
+
+                    void WorkerThread::run(){
+                        /* ... here is the expensive or blocking operation ... */
+                    }
+
+                    /*------------------------------MainWindow-----------------------------------*/
+                    void MainWindow::startWorkInAThread()
+                    {
+                        WorkerThread *workerThread = new WorkerThread();
+                        // Release object in workerThread
+                        connect(workerThread, &WorkerThread::finished, workerThread, &QObject::deleteLater);
+                        workerThread->start();
+                    }
+                ```
+                - 需要注意
+                    - run()中未调用exec()开启event loop，那么在run()执行结束时，线程将自动退出
+                    - 该案例中，WorkerThread存在于实例化它的旧线程中，
+                    仅有run()中的代码是在子线程执行。
+                    - 如果在 WorkerThread 的 run() 中使用了 WorkerThread 的成员变量，而且 QThread的其他方法也使用到了它，即我们从不同线程访问该成员变量，这时需要自行检查这样是否安全。
+                    - QThread实例本身并不是一个线程
+                    - Qt不推荐这种使用方式了
+                    - 在 Qt 4.4 版本以前的 QThread 类是个抽象类，只能使用这种方式
+        
+        - 信号槽连接方式
+            - Qt::AutoConnection
+            - Qt::DirectConnection
+            - Qt::QueuedConnection
+            - Qt::BlockingQueuedConnection
+            - Qt::UniqueConnection
+        - 事件循环
+            - 使用默认的run()方法或自行调用exec()，则QThread将开启事件循环。
+            - QThread同样提供了exit()函数和quit()槽。
+            - 如果一个线程没有开启事件循环，那么该线程中的timeout()将永远不会发射。
+            - 如果在一个线程中创建了OBject 对象，那么发往这个对象的事件将由该线程的事件循环进行分派。
+            - 可以手动使用 QCoreApplication::postEvent() 在任何时间先任何对象发送事件，该函数是线程安全的。
+        - 如何正确退出线程
+            - 删除QThread对象并不会停止其管理的线程的执行
+            - 删除正在运行的线程的QThread将导致程序崩溃
+            在删除QThread之前我们需要等待finish信号
+            - 对于未开启事件循环的线程，我们仅需让run()执行结束即可终止线程
+            - 对于开启了事件循环的线程，退出线程即退出事件循环
+                - quit()/exit() + wait()
+                - terminate() + wait()，很危险不推荐使用
+                - finished
+                    - 官方案例中都使用了finished信号，
+                    connect(workerThread, &WorkerThread::finished, workerThread, &QObject::deleteLater);
+                    - 如果QThread对象在栈上，则由操作系统自动完成，则析构时需要调用QThread::quit()和QThread::wait()
+                    - 如果是堆分配，可以用过deleteLater来让线程自杀
+                    QThread workerThread = new QThread();
+                    connect(workerThread, &QThread::finished, workerThread, &QObject::deleteLater);
+            - 程序退出前，需要判断各线程是否都已退出
+            如果线程的父对象是窗口对象，那么在窗体的析构函数中，还需要调用 wait() 等待线程完全结束再进行下面的析构。
+        - 堆栈大小
+            - 每个线程都有自己的栈，彼此独立，由编译器分配。一般在 Windows 的栈大小为 2M，在 Linux 下是 8M。
+            - Qt 提供了获取以及设置栈空间大小的函数：stackSize() 、setStackSize(uint stackSize)。
+            其中 stackSize() 函数不是返回当前所在线程的栈大小，而是获取用 setStackSize() 函数手动设置的栈大小。
+        - 优先级
+            - 可以通过QThread::setPriority()和QThread::priority()设置和获取线程优先级
+            - QThread 类还提供了 sleep() 、msleep() 、usleep() 这三个函数，
+            usleep() 并 不能保证准确性 。某些OS可能将舍入时间设置为10us/15us；在 Windows 上它将四舍五入为 1ms 的倍数。
+        - 线程间通讯
+            - 共享内存
+            线程隶属于某一个进程，与进程内的其他线程一起共享这片地址空间。
+            - 消息传递
+            借助Qt的信号槽&事件循环机制。
+        - 线程同步
+        - 互斥锁，QMutex
+        - 读写锁，QReadWriteMutex
+        - 条件变量，QWaitCondition
+        - 可重入与线程安全
+            - 线程安全
+            表示该函数可被多个线程调用，即使他们使用了共享数据，因为该共享数据的所有实例都被序列化了。
+            - 可重入
+            一个可重入的函数可被多个线程调用，但是只能是使用自己数据的情况下
+            - 如果每个线程使用一个类的 不同实例 ，该类的成员函数可以被多个线程安全地调用，那么该类被称为可重入的；
+            如果所有线程使用该类的 相同实例 ，该类的成员函数也可以被多个线程安全地调用，那么该类是线程安全的。
+            - QObject的可重入性
+            QObject是可重入的。它的大多数非GUI子类，如QTimer、QTcpSocket也都是可重入的，可以在多线程中使用。
+            对于大部分 GUI类，尤其是 QWidget及其子类，都是不可重入的，我们只能在主线程中使用。QCoreApplication::exec() 也必须在主线程中调用。
+            这些类被设计成在单一线程中进行创建和使用，在一个线程中创建一个对象，然后在另一个线程中调用这个对象的一个函数是无法保证一定可以工作的。需要满足以下三个条件：
+                - QObject 的子对象必须在创建它的父对象的线程中创建。这意味这不要将 QThread 对象 (this) 作为在该线程中创建的对象的父对象。
+                - 事件驱动对象只能在单一线程中使用。例如：不可以在对象所在的线程以外的其他线程中启动一个定时器或连接套接字。
+                - 必须保证在删除 QThread 对象以前，删除在该线程中创建的所有对象。
+        - 开启多少个线程合理
+            - 可用核心数就是所有逻辑 CPU 的总数，这可以用 QThread::idealThreadCount() 静态函数获取
+
+# C++标准库
 - 第二章 C++及标准库简介
     - 2.1 C++ Standard的历史
         - C++标准
