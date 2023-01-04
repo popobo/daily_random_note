@@ -889,4 +889,104 @@
         - 模式定义
             - 定义对象间的一种一对多（变化）的依赖关系
             当一个对象（subject）的状态发射改变时，所有依赖它的对象都得到通知并自动更新
-    
+        - 要点
+            - 观察者模式使得我们可以独立地改变目标与观察者，使两者之前的关系达到松耦合
+            - 目标发送通知时，无需指定观察者，通知会自动传播
+            - 观察者自己决定是否订阅事件，目标对象对此一无所知
+- “单一职责”模式
+    - 如果责任划分不清晰，使用继承的结果往往是随着需求的变化，子类急剧膨胀，同时充斥着重复代码。
+    - 装饰器模式
+        - 动机
+        某些情况下，过度使用继承来扩展对象的功能
+        由于继承为类型引入的静态特质（FileStream::read()，NetworkStream::read()），使得这种扩展方式缺乏灵活性
+        各种子类（扩展功能）的组合会导致子类数量的急剧膨胀
+        - 定义
+            动态（组合）
+            地给一个对象增加一些额外的职责。就增加功能而言，Decorator模式比生成子类（继承）更为灵活（消除重复代码和减少子类个数）
+        - 要点
+            - 通过采用组合而非继承的手法，Decorator模式试了在
+            运行时
+            动态扩展对象功能的能力。
+            - Decorator类在接口上表现为is-a component的继承关系，即Decorator类继承了Component类所具有的接口。
+            但在实现上又表现为has-a component的组合关系，即Decorator又使用了另外一个Component对象。
+            - Decorator模式的目的并未解决“多子类衍生的多继承”问题。
+            Decorator应用的要点在于解决“主体类在多个方向上的扩展功能”。
+            - 编译时复用，变化放到运行时
+        - 
+            ```c++
+            // Component类
+            class FileStream: public Stream {
+            public:
+                ...
+                virtual char read(int number) {
+                }
+            }
+
+            // Decorator类
+            class CryptoStream: public Stream {
+                Stream* stream;//FileStream, NetworkStream, ...
+            public:
+                ...
+                virtual char read(int number) {
+                    //额外的加密操作
+                    stream->read(number);
+                }
+            }
+
+            class BufferStream: public Stream {
+                Stream* stream;//FileStream, NetworkStream, ...
+            public:
+                ...
+                virtual char read(int number) {
+                    //额外的缓存操作
+                    stream->read(number);
+                }
+            }
+
+            int main() {
+                // 运行时装配
+                FileStream *fs = new FileStream();
+                //装饰 1
+                CryptoStream *cs = new CryptoStream(fs);
+                //装饰 2
+                BufferStream *bs = new BufferStream(cs);
+            }
+            ```
+    - 桥模式
+        - 动机
+- “对象创建”模式
+    - 通过“对象创建”模式绕开new，避免对象创建（new）过程中所导致的紧耦合（依赖具体类），从而支持对象创建的稳定。这是接口抽象之后的第一步工作。
+    - 工厂模式
+        - 动机
+        由于需求的变化，需要创建的对象的具体类型经常变化
+        - 并不是消灭变化，而是把变化“关到”一个局部的地方
+        - 
+            ```c++
+            //产品类
+            class BinarySpliter: public ISpliter {}
+
+            //工厂基类
+            class SpliterFactory {
+            public:
+                ISpliter* createSpliter() = 0;
+                virtual ~SpliterFactory() {}
+            }
+
+            class BinarySpliterFactory:public SpliterFactory {
+            public:
+                ISpliter* createSpliter() {
+                    return new BinarySpliter();
+                }
+                virtual ~BinarySpliterFactory() {}
+            }
+
+            class User {
+                SpliterFactory *factory;
+            public:
+                User(SpliterFactory *_factory): factory(_factory) {}
+
+                void run(){
+                    ISpliter *spliter = factory->createSpliter();
+                }
+            }
+            ```
