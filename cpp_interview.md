@@ -374,7 +374,120 @@
         - Qt::UniqueConnection
         执行方式与AutoConnection相同，不过关联时唯一的。
         如果相同两个对象，相同的信号关联到相同的槽，那么第二次 connect 将失败。
-
+    - 信号-槽的元调用
+        - moc（元对象编译器）为信号槽生成了一份元信息
+        - QMetaObject::invokeMethod(&mSwitch, "change");
+        - “运行期反射”的情况下（只知道有这个对象和函数名字）需要用到
+    - 元类型
+        - QObject的子类本身附带元信息，可以直接调用信号槽
+        - Qt已经把基础数据类型注册进元系统，可以在QMetaType中查看
+        - 对于自定义的结构体，类等，则需要注册元类型
+        Q_DECLARE_METATYPE(MyStruct)
+        Q_DECLARE_METATYPE(MyNamespace::MyStruct)
+        - 若采用Qt::QueuedConnection的connect，还需要使用QRegisterMetaType()注册类型
+        #include <QMetaType>
+        Q_DECLARE_METATYPE(MyStruct);
+        qRegisterMetaType<MyStruct>("MyStruct");
+    - 返回值
+        - 成功则返回连接的句柄QMetaObject::Connection，失败则返回无效的句柄，可将句柄转换为bool进行判断
+    - 元对象编译器moc
+        - 编译流程如下
+        - 程序
+            - moc预处理
+                - moc_xxx.cpp
+                    - Q_OBJECT展开生成函数声明以及moc生成实现
+                    - 普通编译
+        - Q_OBJECT宏展开
+            - QMetaObject 是元对象，元对象系统是Qt另外一套核心机制。
+            这个类存储了父类的源对象、我们当前类描述、函数描述和 qt_static_metacall 函数地址即可。
+            - QMetaObject staticMetaObject
+            构造一个 QMetaObject 对象，传入当前moc文件的动态信息。
+            - QMetaObject metaObject()
+            返回当前 QMetaObject，一般而言，虚函数 metaObject() 仅返回类的 staticMetaObject 对象。
+            - qt_metacall(QMetaObject::Call, int, void)
+            - qt_static_metacall(QObject * _o, QMetaObject::Call _c, int _id, void **_a)
+            _o:调用者，_c:QMetaObject::InvokeMetaMethod或者QMetaObject::IndexOfMethod，_id函数索引
+            根据函数索引进行槽函数的调用，有趣的是自行定义的信号也在其索引中，此为信号信号连接合法性佐证二。
+        - 用户定义信号
+            moc会帮助用户实现自定义信号
+    - 对象之间的通信机制
+        - 直接调用
+        - 回调函数+映射表
+        - 观察者模式
+        - connect过程源码分析
+        - connectSlotsByName()
+            - 
+                ```c++
+                void QMetaObject::connectSlotsByName(QObject *o)
+                {
+                    //... 
+                    // 遍历对象中的每个槽方法
+                    for (int i = 0; i < mo->methodCount(); ++i) {
+                        //...
+                        //检查列表中的每个对象
+                        for(int j = 0; j < list.count(); ++j) {
+                            // "on_<objectName>_<signal>"规则匹配
+                            //...
+                            //匹配到了相应的槽
+                            if (Connection(QMetaObjectPrivate::connect(co, sigIndex, smeta, o, i))) {
+                                foundIt = true;
+                                break;
+                            }
+                        //...
+                        }
+                    }
+                }
+                ```
+        - connect()
+            - connect(this,SIGNAL(user_signal()),this,SLOT(user_slot()));
+                - 1 第一阶段
+                    - 检查是否为信号
+                    // 也就是说Qt是通过 char *signal 中的字符判断来确实它是不是信号的，1xxx 表示槽，2xxx 表示信号。
+                    check_signal_macro(sender, signal, "connect", "bind")
+                    ++signal; //skip code 将前面的标志去掉
+                    - //获取信号名
+                    QByteArray signalName = QMetaObjectPrivate::decodeMethodSignature(signal, signalTypes);
+                    - //获取函数index
+                    int signal_index = QMetaObjectPrivate::indexOfSignalRelative(&smeta, signalName, signalTypes.size(), signalTypes.constData());
+                    - //获取membcode（QSLOT_CODE，QSIGNAL_CODE）
+                    int membcode = extract_code(method);
+                    - //获取槽函数名
+                    QByteArray methodName = QMetaObjectPrivate::decodeMethodSignature(method, methodTypes);
+                    - //槽函数运行是信号||槽（信号可以作为槽函数的证据之一）
+                    switch (membcode)
+                - 2 QMetaObject::Connection QMetaObjectPrivate::connect(...)
+                    - /* moc文件中的qt_static_metacall函数的地址被传递给了staticMetaObject对象的static_metacall域。
+                    这里又将static_metacall域的内容传递给callFunction。所以callFunction指向了moc文件中的qt_static_metacall函数。*/
+                    QObjectPrivate::StaticMetaCallFunction callFunction = rmeta ? rmeta->d.static_metacall : nullptr;
+                    - //创建connection对象，监听者模式
+                    Connection的成员，sender，signal_index， receiver.storeRelaxed，receiverThreadData.storeRelaxed，method_relative，method_offset，connectionType，isSlotObject，argumentTypes.storeRelaxed，callFunction
+                - 3 添加监听 void QObjectPrivate::addConnection(int signal, Connection *c)
+                    - // 取得链接列表list，并把新的connection c存储进去
+                    - // 操作元对象中的Connections
+        - 槽函数调用过程
+            - emit 是一个空宏
+            #define emit
+            - 源码分析
+                - QMetaObject::activate
+                //若信号非子类实现，则可能是其祖先类信号，遍历找到血缘关系最近且具有该信号的类
+                while (mo->methodOffset() > signal_index)
+                    mo = mo->superClass();
+                - template <bool callbacks_enabled>
+                void doActivate(QObject *sender, int signal_index, void **argv)
+                    - 连接记录列表，获取ConnectionList
+                    - 获取当前线程id
+                    - 判断是否为发射者线程id
+                    - 遍历链接
+                    - 遍历槽
+                    - 判断是否处于同一线程
+                        - 队列连接或自动连接且不在同一线程则放入发射队列
+                        - 阻塞连接
+                        - 其他：直接调用槽函数或回调函数
+            - 特点
+                - 同一个线程内的信号-槽，就相当于函数调用，与观察者模式类似
+                - 跨线程的信号-槽，在信号触发时，发送者线程将槽函数的调用转化成一次“调用事件”，放入事件循环中。
+                接收者线程执行到下一次事件处理时，处理“调用事件”，调用相应的函数。
+                
 ## QThread多线程
 - QThread使用方法
     - QThread Class文档，https://doc.qt.io/qt-6.2/qthread.html#details
