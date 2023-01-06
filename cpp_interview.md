@@ -416,28 +416,28 @@
         - 观察者模式
         - connect过程源码分析
         - connectSlotsByName()
-            - 
-                ```c++
-                void QMetaObject::connectSlotsByName(QObject *o)
-                {
-                    //... 
-                    // 遍历对象中的每个槽方法
-                    for (int i = 0; i < mo->methodCount(); ++i) {
+        - 
+            ```c++
+            void QMetaObject::connectSlotsByName(QObject *o)
+            {
+                //... 
+                // 遍历对象中的每个槽方法
+                for (int i = 0; i < mo->methodCount(); ++i) {
+                    //...
+                    //检查列表中的每个对象
+                    for(int j = 0; j < list.count(); ++j) {
+                        // "on_<objectName>_<signal>"规则匹配
                         //...
-                        //检查列表中的每个对象
-                        for(int j = 0; j < list.count(); ++j) {
-                            // "on_<objectName>_<signal>"规则匹配
-                            //...
-                            //匹配到了相应的槽
-                            if (Connection(QMetaObjectPrivate::connect(co, sigIndex, smeta, o, i))) {
-                                foundIt = true;
-                                break;
-                            }
-                        //...
+                        //匹配到了相应的槽
+                        if (Connection(QMetaObjectPrivate::connect(co, sigIndex, smeta, o, i))) {
+                            foundIt = true;
+                            break;
                         }
+                    //...
                     }
                 }
-                ```
+            }
+            ```
         - connect()
             - connect(this,SIGNAL(user_signal()),this,SLOT(user_slot()));
                 - 1 第一阶段
@@ -1047,6 +1047,8 @@
         - map和set的插入和删除效率比用其他序列容器高，因为对于关联容器来说，不需要做内存拷贝和内存移动。
         - 当set集合中的元素为类时，该类必须实现运算符 < 的重载
     - 总结：由红黑树实现，其内部元素依据其值自动排序，每个元素值只能出现一次，不允许重复，且插入和删除效率比用其他序列容器高。
+    对于单次查询时间较为敏感，必须保持查询性能的稳定性，比如实时应用等等。
+
 - map
     - map由红黑树实现，其元素都是“键值/实值”所形成一个对组（key/value pairs）
     map主要用于元素一对一映射的情况，map内部自建一颗红黑树，这棵树会根据key值自动排序，所以map内部所有的数据都是有序的。
@@ -1054,9 +1056,23 @@
         - 每个元素都有一个键，且只能出现一次，不允许重复
         - 根据key值能快速查找记录，查找的复杂度基本是O(logN)，效率高
         - 每次插入值的时候，都需要调整红黑树，效率由一定影响。
-        - 增加和删除节点对迭代器影响很小，除了那个操作节点，对其他的节点都没有什么影响。
         - 对于迭代器来说，可以修改value，但不能修改key
+        - 查询、插入、删除操作的时间复杂度都是O(logN)，性能稳定
     - 总结：元素为key-value pair，key和value可以是任意你需要的类型，每个元素都有一个键，且只能出现一次，不允许重复，根据key能够快速查找记录
     - 适用场景：适用于需要存储一个数据字典，并要求方便地根据key找value的场景
 - multimap
     - multimap 和 map 相同，但允许重复元素，也就是说 multimap 可包含多个键值（key）相同的元素。
+- unordered_map
+    - unordered_map是基于哈希表（也叫散列表）实现的。通过把key值生成hash映射到hash表中的一个位置。
+    - 特点
+        - 元素无序存储。
+        - 大多数情况下插入和查询的时间复杂度接近于O(1)（没有冲突的情况下）
+        - 性能不是稳定的，如果hash函数映射的关键码出现的冲突过多，查询插入最坏时间复杂度也会达到O(n)。（但基本不会）
+    - 适用场景：在需要元素有序性或者对单次查询性能要求较为敏感时，请使用map，其余情况下应使用unordered_map。
+
+# OpenGL
+- 多光源
+    - GLSL中的函数
+    - 使用多个光源的方法
+    - 定向光
+
