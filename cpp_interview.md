@@ -701,70 +701,226 @@
             - 向后兼容仅保证源码兼容，不保证二进制兼容
     - 2.2 复杂度与Big-O标记
 - 第三章
-    - 3.1.1 微小但重要的语法提升
-        - Template表达式内的空格
-        - 
-            ```
-            vector<list<int> >; // C++11无需空格
-            ```
-        - nullptr和std::nullptr_t
-            - nullptr代替原来的0和NULL
-            - nullptr是一个新的基础类型std::nullptr_t
-    - 3.1.2 以auto完成类型自动推导
-        - test
-    - 3.1.3 一致性初始化（Uniform Initialization）和初值列（Initializer List）
-        - code
-        - 
-            ```c++
-            int i; // has undefined value
-            int j{}; // j is initialized by 0
-            int *p{}; // p is initialized bny nullptr
-            ```
-        - 窄化（narrowing）也就是精度降低或造成数值变动，对大括号是不成立的
+    - 3.1 C++语言新特性
+        - 3.1.1 微小但重要的语法提升
+            - Template表达式内的空格
+            - 
+                ```
+                vector<list<int> >; // C++11无需空格
+                ```
+            - nullptr和std::nullptr_t
+                - nullptr代替原来的0和NULL
+                - nullptr是一个新的基础类型std::nullptr_t
+        - 3.1.2 以auto完成类型自动推导
+            - test
+        - 3.1.3 一致性初始化（Uniform Initialization）和初值列（Initializer List）
             - code
             - 
                 ```c++
-                    int x1(5.3); // OK
-                    int x2 = 5.3; // OK
-                    int x3{0.0}; // ERROR
-                    vector<int> v1{1, 2.0}; // ERROR
+                int i; // has undefined value
+                int j{}; // j is initialized by 0
+                int *p{}; // p is initialized bny nullptr
                 ```
-        - 当“指明参数个数”和“指明一个初值列”的构造函数同时存在时，
-        会优先使用带初值列的构造函数
-        - 注意explict与带初值列的构造函数的关系
+            - 窄化（narrowing）也就是精度降低或造成数值变动，对大括号是不成立的
+                - code
+                - 
+                    ```c++
+                        int x1(5.3); // OK
+                        int x2 = 5.3; // OK
+                        int x3{0.0}; // ERROR
+                        vector<int> v1{1, 2.0}; // ERROR
+                    ```
+            - 当“指明参数个数”和“指明一个初值列”的构造函数同时存在时，
+            会优先使用带初值列的构造函数
+            - 注意explict与带初值列的构造函数的关系
 
-    - 3.1.4 Range-Based for循环
-        - 类foreach循环
-        - 为了避免调用每个元素的拷贝构造和析构函数，一般采用for(const auto&)的形式
-        等同于 for (auto _pos = coll.begin(), _end=coll.end(); _pos!=_end; ++_pos) {}
-        - 对大小已知的C-style array也可以使用Range-Based for循环
-    - 3.1.5 Move语义与Rvalue Reference
-        - 右值引用
-        - 移动构造函数
-        - C++标准库的class保证，在一次move后，对象处于有效但不确定状态
-        可以在move后，对它赋予新值，但当前值是不确定的
-        - SLT容器保证了，被搬移内容者，搬移后其值为空
-        - Rvalue 和 lvalue Reference的重载规则
-            左值引用只能接受左值
-            常量左值引用能接受左值和右值
-            当（常量）左值引用和右值引用重载同时存在时，
-            左值找左值引用，右值找右值引用
-        - 返回Rvalue Reference
-            - 你不需要也不应该返回右值引用，即不该move()返回值
-            - 编译器有自身的优化规则
-                - RVO，返回值优化
-                - 否则move
-                - 否则copy
-                - 否则报错
-    - 3.1.6 新式的字符串字面常量
-        - Raw String Literal R"()"
-            - 完整形式R"delim(...)delim"，delim是个自定义字符序列
-        - 编码的（Encoded）String Literal
-            - u8, UTF-8 string literal, const char
-            - u, string literal, char16_t
-            - U, string literal, char32_t
-            - L, wide string literal, wchar_t
-
+        - 3.1.4 Range-Based for循环
+            - 类foreach循环
+            - 为了避免调用每个元素的拷贝构造和析构函数，一般采用for(const auto&)的形式
+            等同于 for (auto _pos = coll.begin(), _end=coll.end(); _pos!=_end; ++_pos) {}
+            - 对大小已知的C-style array也可以使用Range-Based for循环
+        - 3.1.5 Move语义与Rvalue Reference
+            - 右值引用
+            - 移动构造函数
+            - C++标准库的class保证，在一次move后，对象处于有效但不确定状态
+            可以在move后，对它赋予新值，但当前值是不确定的
+            - SLT容器保证了，被搬移内容者，搬移后其值为空
+            - Rvalue 和 lvalue Reference的重载规则
+                左值引用只能接受左值
+                常量左值引用能接受左值和右值
+                当（常量）左值引用和右值引用重载同时存在时，
+                左值找左值引用，右值找右值引用
+            - 返回Rvalue Reference
+                - 你不需要也不应该返回右值引用，即不该move()返回值
+                - 编译器有自身的优化规则
+                    - RVO，返回值优化
+                    - 否则move
+                    - 否则copy
+                    - 否则报错
+        - 3.1.6 新式的字符串字面常量
+            - Raw String Literal R"()"
+                - 完整形式R"delim(...)delim"，delim是个自定义字符序列
+            - 编码的（Encoded）String Literal
+                - u8, UTF-8 string literal, const char
+                - u, string literal, char16_t
+                - U, string literal, char32_t
+                - L, wide string literal, wchar_t
+        - 3.1.7 关键字noexcept
+            - noexcept用来指明某个函数无法或不打算抛出异常。
+            void foo() noexcept;
+            若有异常未在foo()内被处理即如果foo()抛出异常，则程序会被终止
+            然后std::terminate()被调用并默认调用std::abort()
+            - 主要用于优化性能
+            - 析构函数不能抛出异常，不要让异常逃离析构函数
+                - 析构函数抛出异常问题
+                    - 如果析构函数抛出异常，则异常点后的语句不会被执行
+                    就有可能会导致资源泄露的问题
+                    - 通常异常发生时，C++的异常处理机制在异常的传播过程中会进行栈展开（stack-unwinding），因发生异常而逐步退出复合语句和函数定义的过程即栈展开。
+                    在栈展开过程中就会调用已经在栈构造好的对象的析构函数来释放资源，此时若其他析构函数本身也抛出异常，则前一个异常尚未处理，又有新异常，会造成程序崩溃。
+                - 解决办法
+                    - 结束程序
+                    - 
+                        ```c++
+                        DBConn::~DBconn()
+                        {
+                            try
+                            {
+                                db.close(); 
+                            }
+                            catch(...)
+                            {
+                                abort();
+                            }
+                        }
+                        ```
+                    - 吞下因调用close而发生的异常
+                    - 
+                        ```c++
+                        DBConn::~DBConn
+                        {
+                            try{ db.close();}
+                            catch(...) 
+                            {
+                                //制作运转记录，记下对close的调用失败！
+                            }
+                        }
+                        ```
+                    - 重新设计DBConn接口，使其客户有机会对可能出现的异常做出反应
+                    - 
+                        ```c++
+                        class DBConn
+                        {
+                        public:
+                            ...
+                            void close() //供客户使用的新函数
+                            {
+                                db.close();
+                                closed = true;
+                            }
+                            ~DBConn()
+                            {
+                                if(!closed)
+                                {
+                                    try        //关闭连接(如果客户不调用DBConn::close)
+                                    {       
+                                        db.close();
+                                    }
+                                    catch(...) //如果关闭动作失败，记录下来并结束程序或吞下异常
+                                    { 
+                                        制作运转记录，记下对close的调用失败；
+                                        ...
+                                    }
+                                }
+                            }
+                        private:
+                            DBConnection db;
+                            bool closed;
+                        };
+                        ```
+            - noexcept(...)中可以指定一个Boolean条件，符合则不抛出异常
+            is_nothrow_move_assignable type trait，判断传入的类型是否存在一个不抛出异常的move assignment操作符
+        - 3.1.8 关键字constexpr
+            - constexpr让表达式核定于编译期
+            - 
+                ```c++
+                constexpr int square(int x) {
+                    return x*x;
+                }
+                float a[square(9)];//OK since C++11：a has 81 elements
+                ```
+        - 3.1.9 崭新的Template特性
+            - Variable Template
+                - 可以接受个数不定的template实参
+                - 
+                    ```c++
+                    template <typename T, typename... Types>
+                    void print(const T& firstArg, const Types&... args) {
+                        std::cout << firstArg << std::endl; // print first argument
+                        print(args...); //call print() for remaining arguments
+                    }
+                    ```
+            - Alias Template（带别名的模板，或者叫Template Typedef）
+            - 
+                ```c++
+                template<typename T>
+                using Vec = std::vector<T, MyAlloc<T>>; // standard vector using own allocator
+                ```
+        - 3.1.10 Lambda
+            - Lambda的语法
+            - 
+                ```c++
+                []{};
+                [](){};
+                [=](){}; 
+                []() mutable, throwSpec, ->retType {};
+                // mutable关键字的作用，对[=]捕获的变量进行 去const操作
+                ```
+            - 
+                ```c++
+                int id = 0;
+                //在f中，id是static的？
+                auto f = [id]() mutable {
+                    std::cout << "id: " << id << std::endl;
+                    id++;
+                }
+                //可以理解为如下的function object
+                class {
+                private:
+                    int id; //copy of outside id
+                public:
+                    void operator()(){
+                        std::cout << "id: " << id << std::endl;
+                        id++;
+                    }
+                };
+                ```
+            - Lambda的类型是不具名的function object（functor）
+            每个Lambda表达式的类型是独一无二的。
+            可以使用std::function<> class template进行表示
+        - 3.1.11 关键字decltype
+            - decltype可以让编译器找出表达式（expression）类型
+            - decltype主要用于声明返回类型
+            超编程（mataprogramming）
+            或用来传递一个lambda类型
+        - 3.1.12 新的函数声明语法
+            - 有时候函数的返回值类型取决于某个表达式对实参的处理
+            - 
+                ```c++
+                template<typename T1, typename T2>
+                auto add(T1 x, T2 y) -> decltype(x+y);  
+                ```
+            - 和“为lambda声明返回类型”是一样的
+        - 3.1.13 带领域的（Scoped）Eunmeration
+            - C++枚举的新的实现
+            - 
+                ```c++
+                eunm class Salutation : char {mr, ms, co, none};
+                ```
+            - 优点
+                - 绝不会隐式转换至/自int
+                - 如果数值（例如mr）不在enumeration被声明的作用域内，则必须改写为Salutation::mr
+    - 3.2 虽旧犹新的语言特性
+    
 # 设计模式
 - 设计模式简介
     - 面向对象
