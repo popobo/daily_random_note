@@ -685,6 +685,41 @@
         - 开启多少个线程合理
             - 可用核心数就是所有逻辑 CPU 的总数，这可以用 QThread::idealThreadCount() 静态函数获取
 
+## QML
+- QML语法规则
+    - QML 是一种多范式语言，它允许根据对象的属性以及它们如何关联和响应其他对象中的变化来定义对象。
+    QML 的声明性语法将属性和行为变化直接集成到单个对象的定义中。
+    - import statements
+        - import语句在QML文档顶部
+        - import类型
+            - 已将类型注册到其中的版本命名空间
+            - 包含类型定义的QML文档所在的相对目录
+            - JavaScript文件
+            合法的JavaScript文档才能够被导入，其中的属性和方法才能够被使用
+        -  examples:
+            - import QtQuick
+            - import QtQuick.LocalStorage 2.0 as Database
+            - import "../privateComponents"
+            - import "somefile.js" as Script
+    - 对象声明
+        - 一个 QML 代码块定义了一个要创建的 QML 对象树。
+        - 
+            ```json
+            import QtQuick 2.0
+
+            Rectangle {
+                width: 100
+                height: 100
+                color: "red"
+            }
+            ```
+        - 简单对象可以放在一行
+        - 
+            ```json
+            Rectangle { width: 100; height: 100; color: "red" }
+            ```
+        - 子对象
+            - 任何对象声明都隐式地声明一个可能包含任意数量的子对象的对象树。
 # C++标准库
 - 第二章 C++及标准库简介
     - 2.1 C++ Standard的历史
