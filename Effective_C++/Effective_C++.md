@@ -15,3 +15,4 @@
   const char *const str = "str"; better than const std::string str("str");
 - second special concerns class-specific constant.
 - #define do not respect scope
+- it is not legal to take the address of an enum
