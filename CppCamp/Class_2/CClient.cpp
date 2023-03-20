@@ -1,20 +1,23 @@
 #include "CClient.hpp"
 #include <cstring>
+#include <array>
 
-CClient::CClient(CFileWriter *writer): m_writer{writer} {}
+static const int BUF_SIZE = 64;
+
+CClient::CClient(IWriter *writer): m_writer{writer} {}
 
 CClient::~CClient() noexcept {}
 
 void CClient::process()
 {
-    char buf[64];
+    std::array<char, BUF_SIZE> buf{};
 
-    memset(buf, 'a', 64);
-    m_writer->writeAtBegin(buf, 64);
+    buf.fill('A');
+    m_writer->writeAtBegin(buf.data(), BUF_SIZE);
 
-    memset(buf, 'b', 32);
-    m_writer->writeAt(16, buf, 32);
+    buf.fill('B');
+    m_writer->writeAt(BUF_SIZE / 4, buf.data(), BUF_SIZE / 2);
 
-    memset(buf, 'c', 64);
-    m_writer->writeAtEnd(buf, 64);
+    buf.fill('C');
+    m_writer->writeAtEnd(buf.data(), BUF_SIZE);
 }
