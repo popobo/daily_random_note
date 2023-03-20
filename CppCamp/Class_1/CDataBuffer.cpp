@@ -65,7 +65,7 @@ CDataBuffer& CDataBuffer::operator=(const CDataBuffer& other) {
     return *this;
 }
 
-CDataBuffer::~CDataBuffer() {
+CDataBuffer::~CDataBuffer() noexcept {
     delete m_pfoo;
 }
 
