@@ -1,14 +1,14 @@
-#include "CClient.hpp"
+#include "Client.hpp"
 #include <cstring>
 #include <array>
 
 static const int BUF_SIZE = 64;
 
-CClient::CClient(IWriter *writer): m_writer{writer} {}
+Client::Client(IWriter *writer): m_writer{writer} {}
 
-CClient::~CClient() noexcept {}
+Client::~Client() noexcept {}
 
-void CClient::process()
+void Client::process()
 {
     std::array<char, BUF_SIZE> buf{};
 

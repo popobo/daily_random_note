@@ -1,12 +1,18 @@
-#include "CClient.hpp"
+#include "Client.hpp"
 
 int main() {
-    IWriter *writer = new CFileWriter{"file writer", StrategyType::NORMAL};
+    FileWriter writer{"filetest", StrategyType::NORMAL};
 
-    CClient client{writer};
+    auto handler{
+        writer.GetWriteEvent()+=[](int pos, int length) {
+            std::cout << "ssssssssssssssssss" << std::endl;
+        }
+    };
+
+    Client client{&writer};
     client.process();
 
-    delete writer;
+    writer.GetWriteEvent()-=handler;
     
     return 0;
 }

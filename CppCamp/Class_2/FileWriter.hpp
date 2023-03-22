@@ -3,17 +3,20 @@
 #include <string>
 #include "IWriter.hpp"
 #include "IWriteStrategy.hpp"
+#include "Observable.hpp"
 
-class CFileWriter: public IWriter {
+class FileWriter: public IWriter, public Observable {
 public:
-    CFileWriter(const std::string& filename);
-    CFileWriter(const std::string& filename, StrategyType strategy);
-    ~CFileWriter() noexcept;
+    FileWriter(const std::string& filename);
+    FileWriter(const std::string& filename, StrategyType strategy);
+    ~FileWriter() noexcept;
     
     int writeAtBegin(void *data, int length) override;
     int writeAt(int pos, void *data, int length) override;
     int writeAtEnd(void *data, int length) override;
 
 private:
+    struct FileWriterImpl;
+    FileWriterImpl * m_pImpl;
     IWriteStrategy *m_strategy;
-};  
+};
