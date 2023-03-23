@@ -22,6 +22,8 @@ class CDataBuffer {
     CDataBuffer(const std::string& name, A *data, uint32_t length);
     CDataBuffer(const CDataBuffer& other);
     CDataBuffer& operator=(const CDataBuffer& other);
+    CDataBuffer(CDataBuffer&& other) noexcept;
+    CDataBuffer& operator=(CDataBuffer&& other) noexcept;
     ~CDataBuffer() noexcept;
 
 private:
@@ -61,6 +63,26 @@ CDataBuffer& CDataBuffer::operator=(const CDataBuffer& other) {
     m_dataName = other.m_dataName;
     m_bufSize = other.m_bufSize;
     m_dataLen = other.m_dataLen;
+
+    return *this;
+}
+
+CDataBuffer::CDataBuffer(CDataBuffer&& other) noexcept :
+m_dataName{std::move(other.m_dataName)}, m_bufSize{other.m_bufSize}, m_dataLen{other.m_dataLen}
+{
+    m_pfoo = other.m_pfoo;
+    other.m_pfoo = nullptr;
+}
+
+CDataBuffer& CDataBuffer::operator=(CDataBuffer&& other) noexcept
+{
+    if (&other == this) {
+        return *this;
+    }
+
+    delete m_pfoo;
+    m_pfoo = other.m_pfoo;
+    other.m_pfoo = nullptr;
 
     return *this;
 }

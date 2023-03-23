@@ -7,10 +7,10 @@
 
 class FileWriter: public IWriter, public Observable {
 public:
-    FileWriter(const std::string& filename);
+    FileWriter() = delete;
     FileWriter(const std::string& filename, StrategyType strategy);
     ~FileWriter() noexcept;
-    
+
     int writeAtBegin(void *data, int length) override;
     int writeAt(int pos, void *data, int length) override;
     int writeAtEnd(void *data, int length) override;
