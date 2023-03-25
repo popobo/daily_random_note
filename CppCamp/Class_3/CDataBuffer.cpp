@@ -1,6 +1,7 @@
 #include <cinttypes>
 #include <string>
 #include <utility>
+#include <iostream>
 
 #define PRINT_FUNC_ADDR std::cout << __func__ << " at " << this << std::endl
 
@@ -19,6 +20,8 @@ public:
 };
 
 class CDataBuffer {
+public:
+    CDataBuffer() = default;
     CDataBuffer(const std::string& name, A *data, uint32_t length);
     CDataBuffer(const CDataBuffer& other);
     CDataBuffer& operator=(const CDataBuffer& other);
@@ -70,12 +73,14 @@ CDataBuffer& CDataBuffer::operator=(const CDataBuffer& other) {
 CDataBuffer::CDataBuffer(CDataBuffer&& other) noexcept :
 m_dataName{std::move(other.m_dataName)}, m_bufSize{other.m_bufSize}, m_dataLen{other.m_dataLen}
 {
+    PRINT_FUNC_ADDR;
     m_pfoo = other.m_pfoo;
     other.m_pfoo = nullptr;
 }
 
 CDataBuffer& CDataBuffer::operator=(CDataBuffer&& other) noexcept
 {
+    PRINT_FUNC_ADDR;
     if (&other == this) {
         return *this;
     }
@@ -87,10 +92,17 @@ CDataBuffer& CDataBuffer::operator=(CDataBuffer&& other) noexcept
     return *this;
 }
 
-CDataBuffer::~CDataBuffer() noexcept {
+CDataBuffer::~CDataBuffer() noexcept { 
     delete m_pfoo;
 }
 
 int main() {
+    A *a1 = new A{};
+    CDataBuffer c1{"c1", a1, sizeof(*a1)};
+    
+    CDataBuffer c2{std::move(c1)};
+    CDataBuffer c3{};
+    c3 = std::move(c2);
+
     return 0;
 }
