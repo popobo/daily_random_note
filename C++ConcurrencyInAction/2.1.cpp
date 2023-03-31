@@ -118,8 +118,8 @@ T parallel_accumulate(Iterator first, Iterator last, T init) {
     unsigned long const hardware_threads = std::thread::hardware_concurrency();
     unsigned long const num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);
     unsigned long const block_size = length / num_threads;
-    std::vector<T> results{num_threads};
-    std::vector<std::thread> threads{num_threads - 1};
+    std::vector<T> results(num_threads);
+    std::vector<std::thread> threads(num_threads - 1);
     Iterator block_start = first;
     for (unsigned long i = 0; i < (num_threads - 1); ++i) {
         Iterator block_end = block_start;
@@ -161,9 +161,12 @@ int main() {
 
     fu3();
     */
-    std::vector<int32_t> vec{10000000};
+    std::vector<int64_t> vec(200000000);
     std::fill(vec.begin(), vec.end(), 1);
-    int32_t sum = std::accumulate(vec.begin(), vec.end(), 0);
+    // int64_t sum = std::accumulate(vec.begin(), vec.end(), 0);
+    // std::cout << "sum: " << sum << std::endl;
 
+    int64_t sum = parallel_accumulate(vec.begin(), vec.end(), 0);
+    std::cout << "sum: " << sum << std::endl; // real time cost is smaller, faster
     return 0;
 }

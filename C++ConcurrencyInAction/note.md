@@ -45,3 +45,10 @@
     - The move support in std::thread also allows for containers of std::thread objects if those containers are move-aware.
 
 - 2.4 Choosing the number of threads at runtime
+    - std::cout << "sum: " << sum << std::endl;
+- 2.5 Identifying threads
+    - get_id()
+    - std::thread::id
+    - std::this_thread::get_id()
+    - std::thread::id can be used as keys in associative containers, unordered associative containers
+- Summary    
