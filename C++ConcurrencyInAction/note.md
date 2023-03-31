@@ -30,4 +30,18 @@
     - 2.1.3 Waiting in exceptional circumstances
         -  This means that the call to join() is liable to be skipped if an exception is thrown after the thread has been started but before the call to join().
         - RAII
-        - 
+        - the local objects are destroyed in reverse order of construction. 
+        - detaching breaks the association of the thread with the std::thread object and ensures that std::terminated() won't be called when the std::thread object is destroyed.
+    - 2.1.4 Running threads in the background
+        - Detached threads truly run in the background; 
+        ownership and control are passed over to the C++ Runtime Library, which ensures that resources associated with the thread are correctly reclaimed when the thread exits
+- 2.2 Passing arguments to a thread function
+    - by default, the arguments are copied into internal storage where they can be assessed by the newly created thread of execution.
+    - std::constructors is oblivious to the types of the arguments expected by the function and blindly copies the supplied values.
+    but the internal code passes copied arguments as rvalues.
+
+- 2.3 Transferring ownership of a thread
+    - you can't just drop a thread by assigning a new value to the std::thread object that manages it.
+    - The move support in std::thread also allows for containers of std::thread objects if those containers are move-aware.
+
+- 2.4 Choosing the number of threads at runtime
