@@ -51,4 +51,52 @@
     - std::thread::id
     - std::this_thread::get_id()
     - std::thread::id can be used as keys in associative containers, unordered associative containers
-- Summary    
+- Summary
+
+# Sharing data between threads
+- 3.1 Problems with sharing data between threads
+    - if all shared data is read-only, there is no problem.
+    - invariants
+    - race condition
+    - 3.1.1 Race conditions
+        - Race condition is anything where the outcome depends on the relative ordering of execution of operations
+    - 3.1.2 Avoiding problematic race conditions
+        - lock-free programming
+        - transaction
+            - software transactional memory(STM)
+        - mutex
+- 3.2 Protecting shared data with mutexes
+    - mutually exclusive
+    - 3.2.1 Using mutexes in C++
+        - std::mutex
+            - lock()
+            - unlock()
+        - std::lock_guard
+        - template argument deduction
+        - std::scoped_lock
+    - 3.2.2 Structuring code for protecting shared data
+        - Don't pass pointers and references to protected data outside the scope of the lock
+        whether by returning them from a function, storing them in externally visible memory,
+        or passing them as arguments to user-supplied functions
+    - 3.2.3 Spotting race conditions inherent in interfaces
+        - Option 1: Pass IN A REFERENCE
+        - Option 2: REQUIRE A NO_THROW COPY CONSTRUCTOR OR MOVE CONSTRUCTOR
+            - std::is_nothrow_copy_constructor
+            - std::is_nothrow_move_constructor
+        - Option 3: RETURN A POINTER TO THE POPPED ITEM
+            - std::shared_ptr
+        - Option 4: PROVIDE BOTH OPTION 1 AND EITHER OPTION 2 OR 3
+        - EXAMPLE DEFINITION OF A THREAD-SAFE STACK
+        - find-grained locking schemes
+        - deadlock
+    - 3.2.4 Deadlock: the problem and solution
+        - lock mutexes in the same order does not make sense in some cases
+        - std::lock
+            - Listing 3.6 Using std::lock() and std::lock_guard in a swap operation
+                - std::lock locks tow mutexes at one time which avoids deadlock
+                - std::adopt_lock indicates to std::lock_guard that std::mutex is already locked.
+            - std::lock provide all-or-nothing semantics
+        - std::scoped_lock<>
+            - equivalent to std::lock_guard<>
+            - variadic template
+            - using the same algorithm as std::lock
