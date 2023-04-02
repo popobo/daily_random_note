@@ -100,3 +100,81 @@
             - equivalent to std::lock_guard<>
             - variadic template
             - using the same algorithm as std::lock
+    - 3.2.5 Further guidelines for avoiding deadlock
+        - Don't wait for another thread if there's a chance it's waiting for you.
+        - AVOID NESTED LOCKS
+            - Don't acquire a lock if you already hold one.
+            - Don't it with std::lock() or std::scoped_lock<>
+        - AVOID CALLING USER-SUPPLIED CODE WHILE HOLDING A LOCK
+        - ACQUIRE LOCKS IN A FIXED ORDER
+            - define a order of traverse
+            - disallowing reverse traversal
+        - USE A LOCK HIERARCHY
+            - hierarchical_mutex
+            - thread-local variable
+            - Listing 3.8 A simple hierarchical mutex
+        - EXTENDING THESE GUIDELINES BEYOND LOCKS
+    - 3.2.6 Flexible locking with std::unique_lock
+        - std::unique_lock
+            - std::adopt_lock
+            - std::defer_lock leave leaves mutexes unlocked
+            - owns_lock()
+            - deferred locking
+    - 3.2.7 Transferring mutex ownership between scopes
+        - std::unique_lock instances don't have to own their associated mutexes
+    - 3.2.8 Locking at an appropriate granularity
+        - Try to do any processing of the data outside the lock
+        - Don't do any time-consuming activities like file I/O while holding a lock.
+- 3.3 Alternative facilities for protecting shared data
+    - The shared data needs protection only from concurrent access while it's being initialized
+    - 3.3.1 Protecting shared data during initialization
+        - Lazy initialization
+        - Listing 3.11 Thread-safe lazy initialization using a mutex
+        - 
+            ```c++
+            Singleton *Singleton::getInstance() {
+                if (m_instance == nullptr) { // 1
+                    // in line 4, for optimization, the compiler may allocate memory and assign it to m_instance, and then execute the constructor
+                    // Suppose a scenario like this
+                    // Thread A calls getInstance() and run to 4, and then m_instance is assigned, but constructor is not called yet.
+                    // And at this moment, Thread B calls getInstance() and because m_instance is null, so it get instance successfully.
+                    // However the state of this instance is not correct, if Thread B can not do things correctly with it.
+                    Lock lock; // 2
+                    if (m_instance == nullptr) { // 3
+                        m_instance = new Singleton(); // 4 
+                    }
+                }
+                return m_instance;
+            }
+            ```
+        - infamous double-checked locking pattern
+        - std::once_flag
+            - each instance of std::once_flag corresponds to a different initialization
+            - can't be copied or moved
+        - std::call_once
+            - std::call_once works with any function and callable object
+        - static local variable
+    - 3.3.2 Protecting rarely updated data structures
+        - reader-writer mutex: exclusive access by a single "writer" thread, and concurrent access by multiple "reader" threads
+        - std::shared_mutex
+            - C++17
+            - performance benefit
+        - std::shared_timed_mutex
+            - C++14
+            - supports additional operations
+        - updater threads std::lock_guard<std::shared_mutex> or std::unique_lock<std::shared_mutex>
+        - reader threads std::shared_lock<std::shared_mutex>
+    - 3.3.3 Recursive locking
+        - std::recursive_mutex
+        - not recommended
+- Summary
+    - std::mutex
+    - std::lock
+    - std::call_once()
+    - std::shared_mutex
+
+# Synchronizing concurrent operations
+    - synchronize actions on separate threads
+    - condition variables and futures
+    - latches and barriers
+    
