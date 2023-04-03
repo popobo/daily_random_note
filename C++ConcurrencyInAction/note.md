@@ -208,4 +208,76 @@
             - shared futures
             - multiple instances of std::shared_future may refer to the same event
             - std::future<void>
-        
+        - 4.2.1 Returning values from background tasks
+            - std::async
+                - asynchronous task
+                - return a std::future object
+                - get() of std::future object blocks until it is ready
+            - Listing 4.6 Using std::future to get the return value of an asynchronous task
+            - std::launch
+                - std::launch::deferred
+                    - run in wait() or get()
+                - std::launch::async
+                    - run in new thread
+        - 4.2.2 Associating a task with a future
+            - std::packaged_task<>
+                - ties a future to a function or callable object
+                - when std::packaged_task<> object is invoked, it call function or...
+            - Listing 4.8 Partial class definition for a specialization of std::packed_task<>
+            - PASSING TASKS BETWEEN THREADS
+                - LISTING 4.9 Running code one a GUI thread using std::packed_task
+        - 4.2.3 Making (std::)promises
+            - std::promise<T>
+                - get_future()
+                - set_value()
+                - std::promise<bool>/std::future<bool>
+        - 4.2.4 Saving an exception for the future
+            - The future becomes ready, and a call to get() rethrows that stored exception
+            - set_exception()
+            - set_value()
+            - std::current_exception()
+            - std::make_exception_ptr()
+            - std::future_error and std::future_error::broken_promise
+        - 4.2.5 Waiting for multiple threads
+            - std::future
+                - only moveable
+            - std::share_future
+                - protect accesses with a lock
+                - pass a copy of std::shared_future object to each thread
+                - share() member function of std::future
+
+    - 4.3 Waiting with a time limit
+        - a duration-based timeout
+        - an absolute timeout
+        - 4.3.1 Clocks
+            - std::chrono::system_clock::now()
+            - std::ratio<1, 25>
+            - The tick period of the clock
+            - use std::chrono::steady_clock instead of std::chrono::system_clock
+            - std:chrono::high_resolution_clock
+        - 4.3.2 Duration
+            - std::chrono::duration<> class template
+            - A number of minutes stored in a short is std::chrono::duration<short, std::ratio<60, 1>>
+            - std::chrono_literals, auto one_day=24h
+            - count()
+                - std::chrono::milliseconds(1234).count() is 1234
+            - returned status from wait_for and wait_until
+                - std::future_status::timeout
+                - std::future_status::ready
+                - std::future_status::deferred, if std::future is deferred until get()
+        - 4.3.3 Time points
+            - std::chrono::time_point<> class template
+            - time_since_epoch()
+            - add durations and subtract durations from instance of std::chrono::time_point<> to produce new time points
+            - Listing 4.11 Waiting for a condition variable with a timeout
+        - 4.3.4 Functions that accept timeouts
+            - std::this_thread::sleep_for()
+            - std::this_thread::sleep_until()
+    - 4.4 Using synchronization of operations to simplify code
+        - 4.4.1 Functional programming with futures
+            - functional programming (FP)
+            - FP-STYLE QUICKSORT
+            - Divide and Conquer
+            - Listing 4.13 Parallel Quicksort using features
+            - CSP(Communicating Sequential Process)
+            
