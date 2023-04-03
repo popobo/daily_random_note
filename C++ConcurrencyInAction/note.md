@@ -79,6 +79,7 @@
         whether by returning them from a function, storing them in externally visible memory,
         or passing them as arguments to user-supplied functions
     - 3.2.3 Spotting race conditions inherent in interfaces
+        - image a stack<vector<int>>
         - Option 1: Pass IN A REFERENCE
         - Option 2: REQUIRE A NO_THROW COPY CONSTRUCTOR OR MOVE CONSTRUCTOR
             - std::is_nothrow_copy_constructor
@@ -174,7 +175,37 @@
     - std::shared_mutex
 
 # Synchronizing concurrent operations
-    - synchronize actions on separate threads
-    - condition variables and futures
-    - latches and barriers
-    
+- synchronize actions on separate threads
+- condition variables and futures
+- latches and barriers
+- 4.1 Waiting for an event or other condition
+    - 4.1.1 Waiting for a condition with condition variables
+        - std::condition_variable
+            - limited to working with std::mutex
+        - std::condition_variable_any
+            - can work with anything that meetings the minimal criteria for being mutex-like
+            - potential for additional costs in terms of size, performance, or OS resources
+        - Listing 4.1 Waiting for data to process with std::condition_variable
+            - data_cond.wait(lk, []{ return !data_queue.empty();})
+            - lambda function is the condition
+                - if condition is not satisfied, put thread in a blocked or waiting state
+                - when being notified, thread wakes from its slumber, reacquires the lock on mutex, and checks the condition again, returning from wait() with mutex still locked if the condition has been satisfied.
+                If the condition hasn't been satisfied, the thread unlocks the mutex and resumes waiting
+        - spurious wake
+        - std::condition_variable is an optimization over a busy-wait
+    - 4.1.2 Building a thread-safe queue with condition variables
+        - three groups of operations:
+            - query the state of the whole queue(empty() and size())
+            - query the elements of the queue(front() and back())
+            - modify the queue(push(), pop() and emplace())
+        - No guarantee of which thread will be notified or even if there is a thread waiting to be notified(all the processing threads might still be processing data)
+    - 4.2 Waiting for on-off events with future
+        - std::future<>
+            - unique futures
+            - one and only one instance that refers to its associated event
+            - std::future<void>
+        - std::shared_future<>
+            - shared futures
+            - multiple instances of std::shared_future may refer to the same event
+            - std::future<void>
+        
