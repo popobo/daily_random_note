@@ -75,7 +75,7 @@ template <typename T>
 std::shared_ptr<T> thread_safe_queue<T>::wait_and_pop()
 {
     std::unique_lock lk{mut};
-    data_cond.wait(lk, [this]{ return !data_queue.empty(); });
+    data_cond.wait(lk, [this]{ return !this->data_queue.empty(); }); // Add this or not 
     std::shared_ptr<T> res{std::make_shared<T>(data_queue.front())};
     data_queue.pop();
     return res;
