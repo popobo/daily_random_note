@@ -24,7 +24,7 @@
 # Managing threads
 - 2.1 Basic thread management
     - 2.1.1 Launching a thread
-        - if you don't decide before the std::thread object is destroyed, then you program is terminated(the std::thread destructor calls std::terminate()).
+        - if you don't decide before the std::thread object is destroyed, then your whole program is terminated(the std::thread destructor calls std::terminate()).
         - It's therefore imperative that you ensure that the thread is correctly joined or detached, even in the presence of exceptions.
     - 2.1.2 Waiting for a thread to complete
     - 2.1.3 Waiting in exceptional circumstances
@@ -37,15 +37,17 @@
         ownership and control are passed over to the C++ Runtime Library, which ensures that resources associated with the thread are correctly reclaimed when the thread exits
 - 2.2 Passing arguments to a thread function
     - by default, the arguments are copied into internal storage where they can be assessed by the newly created thread of execution.
-    - std::constructors is oblivious to the types of the arguments expected by the function and blindly copies the supplied values.
+    By default, the std::thread object stores the copies of the arguments passed in
+    - std::constructors is oblivious(do not know) to the types of the arguments expected by the function and blindly copies the supplied values.
     but the internal code passes copied arguments as rvalues.
+    std::ref
 
 - 2.3 Transferring ownership of a thread
     - you can't just drop a thread by assigning a new value to the std::thread object that manages it.
     - The move support in std::thread also allows for containers of std::thread objects if those containers are move-aware.
 
 - 2.4 Choosing the number of threads at runtime
-    - std::cout << "sum: " << sum << std::endl;
+    - std::thread::hardware_concurrency();
 - 2.5 Identifying threads
     - get_id()
     - std::thread::id
@@ -74,6 +76,7 @@
         - std::lock_guard
         - template argument deduction
         - std::scoped_lock
+            - like std::lock_guard, but manage multiple mutexes
     - 3.2.2 Structuring code for protecting shared data
         - Don't pass pointers and references to protected data outside the scope of the lock
         whether by returning them from a function, storing them in externally visible memory,
@@ -105,7 +108,7 @@
         - Don't wait for another thread if there's a chance it's waiting for you.
         - AVOID NESTED LOCKS
             - Don't acquire a lock if you already hold one.
-            - Don't it with std::lock() or std::scoped_lock<>
+            - Do it with std::lock() or std::scoped_lock<>
         - AVOID CALLING USER-SUPPLIED CODE WHILE HOLDING A LOCK
         - ACQUIRE LOCKS IN A FIXED ORDER
             - define a order of traverse
@@ -118,7 +121,7 @@
     - 3.2.6 Flexible locking with std::unique_lock
         - std::unique_lock
             - std::adopt_lock
-            - std::defer_lock leave leaves mutexes unlocked
+            - std::defer_lock indicates that the mutex should remain unlocked on construction
             - owns_lock()
             - deferred locking
     - 3.2.7 Transferring mutex ownership between scopes
@@ -231,6 +234,7 @@
                 - get_future()
                 - set_value()
                 - std::promise<bool>/std::future<bool>
+                - <span style="color:red;">The underlying implementation of  std::promise<>/std::future is atomic operation and condition variables</span>
         - 4.2.4 Saving an exception for the future
             - The future becomes ready, and a call to get() rethrows that stored exception
             - set_exception()
@@ -253,7 +257,7 @@
             - std::chrono::system_clock::now()
             - std::ratio<1, 25>
             - The tick period of the clock
-            - use std::chrono::steady_clock instead of std::chrono::system_clock
+            - <span style="color:red;">use std::chrono::steady_clock instead of std::chrono::system_clock</span>
             - std:chrono::high_resolution_clock
         - 4.3.2 Duration
             - std::chrono::duration<> class template
