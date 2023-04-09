@@ -5,27 +5,27 @@
 #include <mutex>
 #include <shared_mutex>
 
+struct Address
+{
+    void* object;
+    void* function;
+
+    bool operator<(const Address& other) const {
+        return other.object < object;
+    }
+
+    bool operator==(const Address& other) const {
+        return other.object == object && other.function == function;
+    }
+};
+
 template<typename... Args>
 class Event {
-    struct Address
-    {
-        void* object;
-        void* function;
-    
-        bool operator<(const Address& other) const {
-            return other.object < object;
-        }
-
-        bool operator==(const Address& other) const {
-            return other.object == object && other.function == function;
-        }
-    };
-
     using Handler = EventHandlerInterface<Args...>*;
 
     private:
         std::map<Address, Handler> m_handlers;
-        std::shared_mutex m_mutex;
+        mutable std::shared_mutex m_mutex;
 
     public:
         template<typename... TrueArgs>
@@ -151,14 +151,14 @@ class Event {
         }
 
         void operator()(const Args& ...args) {
-            std::lock_guard lg{m_mutex};
+            std::shared_lock lg{m_mutex};
             for (const auto& handler: m_handlers) {
                 (*handler.second)(args...);
             }
         }
 
         void Fired(const Args& ...args) {
-            std::lock_guard lg{m_mutex};
+            std::shared_lock lg{m_mutex};
             for (const auto& handler: m_handlers) {
                 (*handler.second)(args...);
             }
