@@ -12,7 +12,7 @@ void print1() {
     std::cout << "function print" << std::endl;
 }
 
-class Button {
+class Button: public Object {
     public:
         void print(int a) {
             std::cout << "member function print a: " << a << std::endl;
@@ -44,19 +44,20 @@ public:
 
 int main()
 {
-    // Button *button = new Button{};
-    // Label *label = new Label{};
-    // button->Clicked.Attach(label, &Label::print);
-    // button->Clicked(1, 2);
-    // delete label;
-    // button->Clicked(1, 2);
+    // Button *button1 = new Button();  
+    // Label *label = new Label();  
+    // label->Subscribe(button1, &Button::Clicked, &Label::print);  
+    // button1->Clicked(1, 2);  
+    // delete button1;  
+    // delete label; 
 
-    Button *button = new Button{};
-    Label *label = new Label{};
-    label->Subscribe(button, &Button::Clicked, &Label::print);
-    button->Clicked(1, 2);
-    delete label;
-    button->Clicked(1, 2);
-
+    Button *button1 = new Button();  
+    Label *label = new Label();  
+    label->Subscribe(button1, &Button::Clicked, &Label::print);  
+    button1->Clicked(1, 2);  
+    delete label;  
+    button1->Clicked(1, 2);  
+    delete button1;  
+    
     return 0;
 }
