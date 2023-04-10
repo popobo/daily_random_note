@@ -4,60 +4,80 @@
 #include "Object.hpp"
 
 struct Key
-{  
-    int value = 4;
-};
-
-void print1() {
-    std::cout << "function print" << std::endl;
-}
-
-class Button: public Object {
-    public:
-        void print(int a) {
-            std::cout << "member function print a: " << a << std::endl;
-        }
-
-    Event<int, int> Clicked;
-};
-
-void print2(int x, int y)
 {
-    std::cout << "鼠标的坐标是x：" << x << "y是：" << y << std::endl;
-}
+    int id;
 
-class Label: public Object
-{
-    int* m_a = new int{111};
-
-public:
-    ~Label() {
-        delete m_a;
-        m_a = nullptr;
+    Key(int i)
+    {
+        id = i;
+        std::cout << "构造函数" << std::endl;
     }
+
+};
+
+class Button : public Object
+{
+    int id;
+public:
+    Event<int, const char *, std::string, Key> Clicked;
+
+    Button(int i) : id(i)
+    {}
 
     void print(int a)
     {
-        std::cout << "类成员函数，参数是：" << a << " m_a: " <<* m_a << std::endl;
+        std::cout << "对象ID是：" << id << std::endl;
+    }
+
+    void SetId(int num)
+    {
+        id = num;
     }
 };
 
-int main()
+class Label : public Object
 {
-    // Button *button1 = new Button();  
-    // Label *label = new Label();  
-    // label->Subscribe(button1, &Button::Clicked, &Label::print);  
-    // button1->Clicked(1, 2);  
-    // delete button1;  
-    // delete label; 
+    int id;
+public:
+    Label(int v) : id(v)
+    {}
 
-    Button *button1 = new Button();  
-    Label *label = new Label();  
-    label->Subscribe(button1, &Button::Clicked, &Label::print);  
-    button1->Clicked(1, 2);  
-    delete label;  
-    button1->Clicked(1, 2);  
-    delete button1;  
+    void print(int a)
+    {
+        std::cout << "我是label的打印函数，参数是：" << a << "  id是: " << id << std::endl;
+    }
+};
+
+int main() 
+{
+    Button *button1 = new Button(1);
+    Label *label1 = new Label(1);
+    Label *label2 = new Label(2);
+
+    connect(button1, &Button::Clicked, label1, &Label::print);
+    connect(button1, &Button::Clicked, label2, &Label::print);
+    connect(button1, &Button::Clicked, label1, [=](const char *text)
+    {
+        std::cout << "成功绑定lambda函数啦,这里是1号,打印的信息是：" << text << std::endl;
+    });
+
+    connect(button1, &Button::Clicked, label2, [&](Key key)
+    {
+        std::cout << "成功绑定lambda函数啦,这里是2号，打印的信息是：" << key.id << std::endl;
+    });
     
+    Key key(1);
+    button1->Clicked.emit(1, "按钮被点击啦", "这个是std::string哦", key);
+    std::cout << "----------------" << std::endl;
+    disconnect(button1, &Button::Clicked, label1, &Label::print);
+    button1->Clicked.emit(1, "按钮被点击啦", "这个是std::string哦", key);
+    delete label1;
+    std::cout << "----------------" << std::endl;
+    button1->Clicked.emit(1, "按钮被点击啦", "这个是std::string哦", key);
+    std::cout << "----------------" << std::endl;
+    delete label2;
+    button1->Clicked.emit(1, "按钮被点击啦", "这个是std::string哦", key);
+    delete button1;
+
     return 0;
 }
