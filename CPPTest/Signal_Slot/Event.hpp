@@ -33,24 +33,26 @@ class Event {
         }
 
     private:
-        template<typename T, typename U, typename... TrueArgs>
-        Address ImitationFunctionHelper(T* object, U&& t, void(std::decay_t<U>::*func)(TrueArgs...)) {
-            std::function<void(TrueArgs...)> f = std::forward<U>(t);
+        template<typename Observer, typename Lambda, typename... FuncArgs>
+        Address ImitationFunctionHelper(Observer* object, Lambda&& t, void(std::decay_t<Lambda>::*func)(FuncArgs...)) 
+        {
+            std::function<void(FuncArgs...)> f = std::forward<Lambda>(t);
             Address address{object, func};
             AddHandler(
                 address,
-                new EventHandler<void, std::tuple<TrueArgs...>, Args...>{std::move(t)}
+                new EventHandler<void, std::tuple<FuncArgs...>, Args...>{std::move(t)}
             );
             return address;
         }
 
-        template<typename T, typename U, typename... TrueArgs>
-        Address ImitationFunctionHelper(T* object, U&& t, void(std::decay_t<U>::*func)(TrueArgs...) const) {
-            std::function<void(TrueArgs...)> f = std::forward<U>(t);
+        template<typename Observer, typename Lambda, typename... FuncArgs>
+        Address ImitationFunctionHelper(Observer* object, Lambda&& t, void(std::decay_t<Lambda>::*func)(FuncArgs...) const) 
+        {
+            std::function<void(FuncArgs...)> f = std::forward<Lambda>(t);
             Address address{object, func};
             AddHandler(
                 address,
-                new EventHandler<void, std::tuple<TrueArgs...>, Args...>{std::move(t)}
+                new EventHandler<void, std::tuple<FuncArgs...>, Args...>{std::move(t)}
             );
             return address;
         }
