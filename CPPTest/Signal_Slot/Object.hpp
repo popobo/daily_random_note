@@ -3,6 +3,8 @@
 #include "Event.hpp"
 #include <map>
 #include <unordered_map>
+#include <atomic>
+#include <optional>
 
 class Object {
     
@@ -13,6 +15,8 @@ class Object {
         
         std::unordered_map<Address, std::function<void()>, AddressHasher> m_observers;
         std::shared_mutex m_observers_shared_mutex;
+
+        std::atomic<std::thread::id> m_thread_id;
 
     private:
         void AddNotifier(
@@ -66,6 +70,11 @@ class Object {
         }
 
     public:
+        Object()
+        {
+            m_thread_id = std::this_thread::get_id();
+        }
+
         virtual ~Object() 
         {
             {
@@ -83,12 +92,28 @@ class Object {
             }
         }
 
+        void MoveToThread(const std::thread& target)
+        {
+            m_thread_id = target.get_id();
+        }
+
+        void MoveToThread(const std::thread::id& id)
+        {
+            m_thread_id = id;
+        }
+
+        std::thread::id ThreadId()
+        {
+            return m_thread_id;
+        }
+
         template<typename Notifier, typename Observer, typename... EmitArgs, typename... FuncArgs>
         friend void connect(
             Notifier* notifier,
             Event<EmitArgs...> Notifier::* event,
             Observer* observer,
-            void (Observer::*func)(FuncArgs...)
+            void (Observer::*func)(FuncArgs...),
+            ConnectionType connection_type = ConnectionType::AutoConnection
         );
 
         template<typename Notifier, typename Observer, typename... EmitArgs, typename... FuncArgs>
@@ -104,7 +129,8 @@ class Object {
             Notifier* notifier,
             Event<EmitArgs...> Notifier::* event,
             Observer* observer,
-            Lambda&& lambda
+            Lambda&& lambda,
+            ConnectionType connection_type = ConnectionType::AutoConnection
         );
 };
 
@@ -113,7 +139,9 @@ inline void connect(
     Notifier* notifier,
     Event<EmitArgs...> Notifier::* event,
     Observer* observer,
-    void (Observer::*func)(FuncArgs...)) 
+    void (Observer::*func)(FuncArgs...),
+    ConnectionType connection_type
+) 
 {
     Address observer_address{notifier, event};
     Address notifier_address{observer, func};
@@ -125,14 +153,20 @@ inline void connect(
             observer, func
         };
 
-        (notifier->*event).AddHandler(observer_address, event_handler);
+        typename Event<EmitArgs...>::Task task;
+        task.event_handler = event_handler;
+
+        task.thread_id = observer->ThreadId();
+        task.connection_type = connection_type;
+
+        (notifier->*event).AddTask(observer_address, task);
 
         notifier->AddObserver(observer_address, [=] {
             observer->RemoveNotifier(notifier_address, observer_address.function);
         });
 
         observer->AddNotifier(notifier_address, observer_address.function, [=] {
-            (notifier->*event).RemoveHandler(observer_address);
+            (notifier->*event).RemoveTask(observer_address);
             notifier->RemoveObserver(observer_address);
         });
     }
@@ -152,7 +186,7 @@ inline void disconnect(
     if (notifier->ContainObserver(observer_address) && 
         observer->ContainNotifier(notifier_address, observer_address.function))
     {
-        (notifier->*event).RemoveHandler(observer_address);
+        (notifier->*event).RemoveTask(observer_address);
         notifier->RemoveObserver(observer_address);
         observer->RemoveNotifier(notifier_address, observer_address.function);
     }
@@ -163,18 +197,19 @@ inline void connect(
     Notifier* notifier,
     Event<EmitArgs...> Notifier::* event,
     Observer* observer,
-    Lambda&& lambda
+    Lambda&& lambda,
+    ConnectionType connection_type
 )
 {
     Address notifier_address{notifier, event};
-    Address observer_address = (notifier->*event).ImitationFunctionHelper(observer, lambda, &Lambda::operator());
+    Address observer_address = (notifier->*event).ImitationFunctionHelper(observer, lambda, &Lambda::operator(), connection_type);
 
     notifier->AddObserver(observer_address, [=] {
         observer->RemoveNotifier(notifier_address, observer_address.function);
     });
 
     observer->AddNotifier(notifier_address, observer_address.function, [=] {
-        (notifier->*event).RemoveHandler(observer_address);
+        (notifier->*event).RemoveTask(observer_address);
         notifier->RemoveObserver(observer_address);
     });
 }
@@ -187,7 +222,7 @@ inline void connect(
 )
 {
     auto event_handler = new EventHandler<void, std::tuple<FuncArgs...>, EmitArgs...>{func};
-    (notifier->*event).AddHandler(Address{nullptr, func}, func);
+    (notifier->*event).AddTask(Address{nullptr, func}, func);
 }
 
 template<typename Notifier, typename... EmitArgs, typename... FuncArgs>
@@ -197,5 +232,5 @@ inline void disconnect(
     void (*func)(FuncArgs...)
 )
 {
-    (notifier->*event).RemoveHandler(Address{nullptr, func});
+    (notifier->*event).RemoveTask(Address{nullptr, func});
 }

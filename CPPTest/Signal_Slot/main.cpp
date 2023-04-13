@@ -53,18 +53,25 @@ int main()
     Button *button1 = new Button(1);
     Label *label1 = new Label(1);
     Label *label2 = new Label(2);
+    EventLoop * event_loop_ptr = nullptr;
+    std::thread th1{[&]() {
+        event_loop_ptr = new EventLoop{};
+        label1->MoveToThread(std::this_thread::get_id());
+        event_loop_ptr->Run();
+    }};
 
-    connect(button1, &Button::Clicked, label1, &Label::print);
-    connect(button1, &Button::Clicked, label2, &Label::print);
+    // connect(button1, &Button::Clicked, label1, &Label::print);
+    // connect(button1, &Button::Clicked, label2, &Label::print);
     connect(button1, &Button::Clicked, label1, [=](const char *text)
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         std::cout << "成功绑定lambda函数啦,这里是1号,打印的信息是：" << text << std::endl;
     });
 
-    connect(button1, &Button::Clicked, label2, [&](Key key)
-    {
-        std::cout << "成功绑定lambda函数啦,这里是2号，打印的信息是：" << key.id << std::endl;
-    });
+    // connect(button1, &Button::Clicked, label2, [&](Key key)
+    // {
+    //     std::cout << "成功绑定lambda函数啦,这里是2号，打印的信息是：" << key.id << std::endl;
+    // }, ConnectionType::AutoConnection);
     
     Key key(1);
     button1->Clicked.emit(1, "按钮被点击啦", "这个是std::string哦", key);
@@ -78,6 +85,11 @@ int main()
     delete label2;
     button1->Clicked.emit(1, "按钮被点击啦", "这个是std::string哦", key);
     delete button1;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    event_loop_ptr->Quit();
+    th1.join();
+    delete event_loop_ptr;
 
     return 0;
 }
