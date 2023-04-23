@@ -305,3 +305,5 @@ std::shared_ptr<Frame[]> f8(new Frame[10]());             // Error，管理动�
     部门构成，汇报路径
     主要的工作职责
     什么时候能够得到回复
+
+    - docker run --name chatgpt-web -d -p 3002:3002 --env OPENAI_API_KEY=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 chenzhaoyu94/chatgpt-web
