@@ -306,4 +306,27 @@ std::shared_ptr<Frame[]> f8(new Frame[10]());             // Error，管理动�
     主要的工作职责
     什么时候能够得到回复
 
-    - docker run --name chatgpt-web -d -p 3002:3002 --env OPENAI_API_KEY=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 chenzhaoyu94/chatgpt-web
+    - docker run --name chatgpt-web -d -p 3002:3002 --env OPENAI_API_KEY=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 chenzhaoyu94/chatgpt-web
+
+    ../repo/repo init -u https://gitee.com/weidongshan/manifests.git -b linux-sdk -m stm32mp1/100ask_stm32mp157_pro_release-v2.0.xml --no-repo-verify
+
+## 20230619
+### 原子变量，自旋锁，信号量，互斥锁
+
+- 要想了解原子变量，首先我们需要了解普通变量是什么，
+```c
+int x = 0;
+
+x = 1;
+```
+在这段c代码中，我们定义了一个变量x，并对它进行了一个赋值操作，赋值为1。对人类来说，这个赋值操作完成后，x就变成1，我们会将其视作一个不可分割的整体。但实际上，c代码要经过编译转化成汇编代码，汇编代码再通过汇编转化成机器码，然后cpu才能执行。
+我们来看看这个赋值操作对应的汇编代码
+```asm
+/* 
+从对应内存加载数据到寄存器
+给寄存器赋值
+将寄存器的值保存到对应内存
+*/
+```
+总共三条汇编指令，cpu在执行一条汇编指令的过程(取指，译指，执行)中是不会被打断的，但cpu在执行完每一条指令后回去检测中断(类似于判断一个状态值是否改变)，如果有中断过来，那么各种情况就都有可能发生了，cpu可能会去执行另一个线程的指令，也就是说这三条指令不是一个整体。
+而原子变量以及对应的原子操作，就是保证这样的赋值操作会作为一个整体被cpu执行完。
