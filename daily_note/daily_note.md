@@ -249,7 +249,7 @@ std::shared_ptr<Frame[]> f8(new Frame[10]());             // Error，管理动�
 ## 20221207
 ### confusion
 - 问题如下，解决方法是https://www.jianshu.com/p/dd33613360e0，需要再深入研究下
-![screenshot](./Snipaste_2022-12-07_15-49-10.png)
+![screenshot](./images/Snipaste_2022-12-07_15-49-10.png)
 
 ## 20221209
 ### confusion
@@ -312,7 +312,6 @@ std::shared_ptr<Frame[]> f8(new Frame[10]());             // Error，管理动�
 
 ## 20230619
 ### 原子变量，自旋锁，信号量，互斥锁
-
 - 要想了解原子变量，首先我们需要了解普通变量是什么，
 ```c
 int x = 0;
@@ -330,3 +329,8 @@ x = 1;
 ```
 总共三条汇编指令，cpu在执行一条汇编指令的过程(取指，译指，执行)中是不会被打断的，但cpu在执行完每一条指令后回去检测中断(类似于判断一个状态值是否改变)，如果有中断过来，那么各种情况就都有可能发生了，cpu可能会去执行另一个线程的指令，也就是说这三条指令不是一个整体。
 而原子变量以及对应的原子操作，就是保证这样的赋值操作会作为一个整体被cpu执行完。
+
+## 20230712
+### std::promise如何使用
+- std::promise promises to give a value in future
+[]
