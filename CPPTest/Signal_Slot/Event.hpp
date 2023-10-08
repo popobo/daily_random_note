@@ -20,10 +20,12 @@ enum class ConnectionType
 
 
 
+// SLOT
 template<typename... Args>
 class Event {
     using Handler = EventHandlerInterface<Args...>*;
 
+    // SIGNAL
     struct Task
     {
         std::optional<std::thread::id> thread_id;
@@ -32,7 +34,6 @@ class Event {
     };
 
     private:
-
         std::unordered_map<Address, Task, AddressHasher> m_tasks_map;
         mutable std::shared_mutex m_shared_mutex;
     

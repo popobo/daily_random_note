@@ -5,7 +5,7 @@ from pathlib import Path
 logo = Image.open("logo1.png")
 
 # 计算logo缩放后的大小
-max_size = 200  # 假设最大宽或高为100像素
+max_size = 500  # 假设最大宽或高为100像素
 w, h = logo.size
 if w > h:
     new_w = max_size
@@ -23,7 +23,7 @@ for img_file in Path("images").glob("*.jpg"):
     image = Image.open(img_file)
 
     # 将logo粘贴到图片的左上角
-    image.paste(logo, (20, 20), mask=logo)
+    image.paste(logo, (40, 40), mask=logo)
 
     # 保存结果到指定文件夹
     result_folder = Path("result")

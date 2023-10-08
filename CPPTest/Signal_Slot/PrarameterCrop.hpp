@@ -18,19 +18,23 @@ TupleTake 是一个模板函数，它接收一个函数和一个元组。它首�
 #include <functional>
 #include <iostream>
 
+//参数裁剪相关
 template<typename Subset, typename Superset>
 struct is_subset_of;
 
+//如果子集的元素和父集的元素不一样，那就递归找父集合的下一个元素
 template<typename T, typename... Subset, typename U, typename... Superset>
 struct is_subset_of<std::tuple<T, Subset...>, std::tuple<U, Superset...>> {
     constexpr static bool value = is_subset_of<std::tuple<T, Subset...>, std::tuple<Superset...>>::value;
 };
 
+//如果子集元素和父集元素的一样，那子集就递归寻找下一个元素
 template<typename T, typename... Subset, typename... Superset>
 struct is_subset_of<std::tuple<T, Subset...>, std::tuple<T, Superset...>> {
     constexpr static bool value = is_subset_of<std::tuple<Subset...>, std::tuple<Superset...>>::value;
 };
 
+//递归终止条件，如果子集都找完了，父集还没没空，说明满足子序列关系
 template<typename... Superset>
 struct is_subset_of<std::tuple<>, std::tuple<Superset...>> {
     constexpr static bool value = true;

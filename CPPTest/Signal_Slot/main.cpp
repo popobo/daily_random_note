@@ -51,7 +51,8 @@ public:
 int main() 
 {
     Button *button1 = new Button(1);
-    Label *label1 = new Label(1);
+    Label *label1
+     = new Label(1);
     Label *label2 = new Label(2);
     EventLoop * event_loop_ptr = nullptr;
     std::thread th1{[&]() {
