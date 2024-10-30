@@ -21,6 +21,10 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+git clone git@github.com:zdharma-continuum/history-search-multi-word.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/history-search-multi-word
+
 # 启动插件
 
 plugins=(
@@ -29,5 +33,6 @@ plugins=(
     zsh-syntax-highlighting
     z
     extract
+    history-search-multi-word
 )
 ```
