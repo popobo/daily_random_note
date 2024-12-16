@@ -1,0 +1,30 @@
+services:
+  windows:
+    image: dockurr/windows
+    container_name: windows
+    environment:
+      VERSION: "11"
+      DISK_SIZE: "256G"
+      RAM_SIZE: "8G"
+      CPU_CORES: "4"
+      USERNAME: "bo"
+      PASSWORD: "331361"
+    devices:
+      - /dev/kvm
+    cap_add:
+      - NET_ADMIN
+    # ports:
+    #   - 8006:8006
+    #   - 3389:3389/tcp
+    #   - 3389:3389/udp
+    stop_grace_period: 2m
+    volumes:
+      - /mnt/7d7e518d-10ac-4a8d-841a-e9b83cecdf15/work_code/gateway/windows:/data
+      - ./Win11_24H2_English_x64.iso:/custom.iso
+    networks:
+      vlan:
+        ipv4_address: 192.168.40.20
+
+networks:
+  vlan:
+    external: true
